@@ -15,6 +15,11 @@ except ImportError:
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from core.media.inspector import MediaInspector  # noqa: E402
+
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
 
 
@@ -33,9 +38,10 @@ def create_window() -> tk.Tk:
     """Create the prototype main window."""
     window = TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     window.title("Exile Creator Kit")
-    window.geometry("420x320")
+    window.geometry("420x420")
     selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
+    media_info_text = tk.StringVar(value="")
     export_status = tk.StringVar(value="Idle")
     export_message = tk.StringVar(value="")
 
@@ -49,6 +55,20 @@ def create_window() -> tk.Tk:
         x_button.config(state=state)
         youtube_button.config(state=state)
 
+    def set_media_info(file_path: str) -> None:
+        try:
+            media_info = MediaInspector().analyze(file_path)
+        except RuntimeError:
+            media_info_text.set("Media information unavailable.")
+            return
+
+        media_info_text.set(
+            f"File name: {media_info.file_name}\n"
+            f"Duration: {media_info.duration_text}\n"
+            f"Resolution: {media_info.width}x{media_info.height}\n"
+            f"File size: {media_info.file_size_mb:.2f} MB"
+        )
+
     def set_selected_file(file_path: str) -> None:
         path = Path(file_path)
         if path.suffix.lower() not in SUPPORTED_VIDEO_EXTENSIONS:
@@ -57,6 +77,7 @@ def create_window() -> tk.Tk:
 
         selected_file_path.set(str(path))
         selected_file_name.set(path.name)
+        set_media_info(str(path))
 
     def export_selected(script_name: str) -> None:
         file_path = selected_file_path.get()
@@ -145,6 +166,9 @@ def create_window() -> tk.Tk:
 
     choose_button = tk.Button(window, text="Choose Video", width=18, command=choose_video)
     choose_button.pack(pady=(0, 18))
+
+    media_info_label = tk.Label(window, textvariable=media_info_text, justify=tk.LEFT)
+    media_info_label.pack(pady=(0, 14))
 
     button_frame = tk.Frame(window)
     button_frame.pack()
