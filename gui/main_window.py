@@ -63,7 +63,10 @@ def create_window() -> tk.Tk:
             return
 
         progress_bar.stop()
-        export_status.set("Completed")
+        if process.returncode == 0:
+            export_status.set("Completed")
+        else:
+            export_status.set("Failed")
 
     def choose_video() -> None:
         file_path = filedialog.askopenfilename(
