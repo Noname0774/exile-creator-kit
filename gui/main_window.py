@@ -1,5 +1,6 @@
 """Prototype GUI window for Exile Creator Kit."""
 
+from datetime import datetime
 import os
 import shutil
 import subprocess
@@ -39,12 +40,13 @@ def create_window() -> tk.Tk:
     """Create the prototype main window."""
     window = TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     window.title("Exile Creator Kit")
-    window.geometry("460x560")
+    window.geometry("460x680")
     selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
     media_info_text = tk.StringVar(value="")
     export_status = tk.StringVar(value="Idle")
     export_message = tk.StringVar(value="")
+    recent_exports_text = tk.StringVar(value="No exports yet.")
 
     output_folder_path = tk.StringVar(value="")
 
@@ -52,6 +54,19 @@ def create_window() -> tk.Tk:
         path = Path(file_path)
         suffix = "_youtube" if script_name == "export_to_youtube.py" else "_x"
         return path.with_name(f"{path.stem}{suffix}.mp4")
+
+    def get_export_target(script_name: str) -> str:
+        if script_name == "export_to_youtube.py":
+            return "YouTube"
+
+        return "X"
+
+    recent_exports: list[str] = []
+
+    def add_recent_export(output_path: Path, target: str) -> None:
+        timestamp = datetime.now().strftime("%H:%M")
+        recent_exports.insert(0, f"{output_path.name} | {target} | Completed | {timestamp}")
+        recent_exports_text.set("\n".join(recent_exports[:5]))
 
     def set_export_buttons_enabled(is_enabled: bool) -> None:
         state = tk.NORMAL if is_enabled else tk.DISABLED
@@ -138,11 +153,12 @@ def create_window() -> tk.Tk:
 
         window.after(500, lambda: export_status.set("Encoding..."))
         output_path = get_output_path(file_path, script_name)
-        window.after(1000, lambda: watch_export(process, output_path))
+        target = get_export_target(script_name)
+        window.after(1000, lambda: watch_export(process, output_path, target))
 
-    def watch_export(process: subprocess.Popen, output_path: Path) -> None:
+    def watch_export(process: subprocess.Popen, output_path: Path, target: str) -> None:
         if process.poll() is None:
-            window.after(1000, lambda: watch_export(process, output_path))
+            window.after(1000, lambda: watch_export(process, output_path, target))
             return
 
         progress_bar.stop()
@@ -152,6 +168,7 @@ def create_window() -> tk.Tk:
             output_folder_path.set(str(output_path.parent))
             set_open_output_button_enabled(True)
             export_message.set(f"Saved to:\n{output_path}")
+            add_recent_export(output_path, target)
         else:
             export_status.set("Failed")
             set_open_output_button_enabled(False)
@@ -263,6 +280,22 @@ def create_window() -> tk.Tk:
         command=open_output_folder,
     )
     open_output_button.pack(pady=(8, 0))
+
+    add_separator()
+
+    recent_exports_heading = tk.Label(
+        window,
+        text="Recent Exports",
+        font=("Segoe UI", 11, "bold"),
+    )
+    recent_exports_heading.pack(anchor=tk.W, padx=40)
+
+    recent_exports_label = tk.Label(
+        window,
+        textvariable=recent_exports_text,
+        justify=tk.LEFT,
+    )
+    recent_exports_label.pack(anchor=tk.W, padx=54, pady=(8, 0))
 
     return window
 
