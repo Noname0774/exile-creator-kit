@@ -1,5 +1,6 @@
 """Prototype GUI window for Exile Creator Kit."""
 
+import os
 import shutil
 import subprocess
 import sys
@@ -45,15 +46,31 @@ def create_window() -> tk.Tk:
     export_status = tk.StringVar(value="Idle")
     export_message = tk.StringVar(value="")
 
-    def get_output_filename(file_path: str, script_name: str) -> str:
+    output_folder_path = tk.StringVar(value="")
+
+    def get_output_path(file_path: str, script_name: str) -> Path:
         path = Path(file_path)
         suffix = "_youtube" if script_name == "export_to_youtube.py" else "_x"
-        return f"{path.stem}{suffix}.mp4"
+        return path.with_name(f"{path.stem}{suffix}.mp4")
 
     def set_export_buttons_enabled(is_enabled: bool) -> None:
         state = tk.NORMAL if is_enabled else tk.DISABLED
         x_button.config(state=state)
         youtube_button.config(state=state)
+
+    def set_open_output_button_enabled(is_enabled: bool) -> None:
+        state = tk.NORMAL if is_enabled else tk.DISABLED
+        open_output_button.config(state=state)
+
+    def open_output_folder() -> None:
+        folder_path = output_folder_path.get()
+        if not folder_path:
+            return
+
+        try:
+            os.startfile(folder_path)
+        except OSError:
+            messagebox.showinfo("Exile Creator Kit", "Output folder could not be opened.")
 
     def format_file_size(file_size_mb: float) -> str:
         if file_size_mb >= 1024:
@@ -105,7 +122,9 @@ def create_window() -> tk.Tk:
 
         export_status.set("Preparing...")
         export_message.set("")
+        output_folder_path.set("")
         set_export_buttons_enabled(False)
+        set_open_output_button_enabled(False)
         progress_bar.start(10)
 
         try:
@@ -118,21 +137,24 @@ def create_window() -> tk.Tk:
             return
 
         window.after(500, lambda: export_status.set("Encoding..."))
-        output_filename = get_output_filename(file_path, script_name)
-        window.after(1000, lambda: watch_export(process, output_filename))
+        output_path = get_output_path(file_path, script_name)
+        window.after(1000, lambda: watch_export(process, output_path))
 
-    def watch_export(process: subprocess.Popen, output_filename: str) -> None:
+    def watch_export(process: subprocess.Popen, output_path: Path) -> None:
         if process.poll() is None:
-            window.after(1000, lambda: watch_export(process, output_filename))
+            window.after(1000, lambda: watch_export(process, output_path))
             return
 
         progress_bar.stop()
         set_export_buttons_enabled(True)
         if process.returncode == 0:
             export_status.set("Completed")
-            export_message.set(f"Saved as:\n{output_filename}")
+            output_folder_path.set(str(output_path.parent))
+            set_open_output_button_enabled(True)
+            export_message.set(f"Saved to:\n{output_path}")
         else:
             export_status.set("Failed")
+            set_open_output_button_enabled(False)
             export_message.set("Export failed.")
 
     def choose_video() -> None:
@@ -232,6 +254,15 @@ def create_window() -> tk.Tk:
 
     message_label = tk.Label(window, textvariable=export_message)
     message_label.pack(pady=(8, 0))
+
+    open_output_button = tk.Button(
+        window,
+        text="Open Output Folder",
+        width=22,
+        state=tk.DISABLED,
+        command=open_output_folder,
+    )
+    open_output_button.pack(pady=(8, 0))
 
     return window
 
