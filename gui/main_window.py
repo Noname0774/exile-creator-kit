@@ -21,7 +21,7 @@ def launch_export_workflow(script_name: str, file_path: str) -> None:
     """Launch the existing export entry workflow."""
     script_path = ROOT_DIR / "tools" / script_name
     subprocess.Popen(
-        ["cmd", "/c", "start", "", sys.executable, str(script_path), file_path],
+        [sys.executable, str(script_path), file_path],
         cwd=ROOT_DIR,
     )
 
