@@ -38,7 +38,7 @@ def create_window() -> tk.Tk:
     """Create the prototype main window."""
     window = TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     window.title("Exile Creator Kit")
-    window.geometry("420x420")
+    window.geometry("460x560")
     selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
     media_info_text = tk.StringVar(value="")
@@ -146,17 +146,30 @@ def create_window() -> tk.Tk:
         if dropped_paths:
             set_selected_file(dropped_paths[0])
 
+    def add_separator() -> None:
+        separator = ttk.Separator(window, orient=tk.HORIZONTAL)
+        separator.pack(fill=tk.X, padx=28, pady=14)
+
     title = tk.Label(window, text="Exile Creator Kit", font=("Segoe UI", 18, "bold"))
-    title.pack(pady=(28, 20))
+    title.pack(pady=(24, 6))
 
     description = tk.Label(window, text="Create upload-ready videos for X and YouTube")
     description.pack()
+
+    add_separator()
+
+    selected_video_heading = tk.Label(
+        window,
+        text="Selected Video",
+        font=("Segoe UI", 11, "bold"),
+    )
+    selected_video_heading.pack(anchor=tk.W, padx=40, pady=(0, 8))
 
     drop_area = tk.Label(
         window,
         textvariable=selected_file_name,
         relief="groove",
-        width=34,
+        width=42,
         height=3,
     )
     drop_area.pack(pady=(0, 10))
@@ -164,11 +177,15 @@ def create_window() -> tk.Tk:
         drop_area.drop_target_register(DND_FILES)
         drop_area.dnd_bind("<<Drop>>", handle_drop)
 
-    choose_button = tk.Button(window, text="Choose Video", width=18, command=choose_video)
-    choose_button.pack(pady=(0, 18))
-
     media_info_label = tk.Label(window, textvariable=media_info_text, justify=tk.LEFT)
-    media_info_label.pack(pady=(0, 14))
+    media_info_label.pack(anchor=tk.W, padx=54, pady=(0, 4))
+
+    add_separator()
+
+    choose_button = tk.Button(window, text="Choose Video", width=22, command=choose_video)
+    choose_button.pack(pady=(0, 2))
+
+    add_separator()
 
     button_frame = tk.Frame(window)
     button_frame.pack()
@@ -176,21 +193,26 @@ def create_window() -> tk.Tk:
     x_button = tk.Button(
         button_frame,
         text="Export for X (512 MB)",
-        width=16,
+        width=34,
         command=lambda: export_selected("export_to_x.py"),
     )
-    x_button.pack(side=tk.LEFT, padx=8)
+    x_button.pack(pady=(0, 8))
 
     youtube_button = tk.Button(
         button_frame,
         text="Export for YouTube (High Quality)",
-        width=16,
+        width=34,
         command=lambda: export_selected("export_to_youtube.py"),
     )
-    youtube_button.pack(side=tk.LEFT, padx=8)
+    youtube_button.pack()
+
+    add_separator()
+
+    status_heading = tk.Label(window, text="Status", font=("Segoe UI", 11, "bold"))
+    status_heading.pack(anchor=tk.W, padx=40)
 
     status_label = tk.Label(window, textvariable=export_status)
-    status_label.pack(pady=(18, 6))
+    status_label.pack(pady=(8, 6))
 
     progress_bar = ttk.Progressbar(window, mode="indeterminate", length=280)
     progress_bar.pack()
