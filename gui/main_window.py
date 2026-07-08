@@ -146,9 +146,16 @@ def create_window() -> tk.Tk:
         if dropped_paths:
             set_selected_file(dropped_paths[0])
 
+    def register_drop_target(widget: tk.Widget) -> None:
+        if TkinterDnD:
+            widget.drop_target_register(DND_FILES)
+            widget.dnd_bind("<<Drop>>", handle_drop)
+
     def add_separator() -> None:
         separator = ttk.Separator(window, orient=tk.HORIZONTAL)
         separator.pack(fill=tk.X, padx=28, pady=14)
+
+    register_drop_target(window)
 
     title = tk.Label(window, text="Exile Creator Kit", font=("Segoe UI", 18, "bold"))
     title.pack(pady=(24, 6))
@@ -173,9 +180,7 @@ def create_window() -> tk.Tk:
         height=3,
     )
     drop_area.pack(pady=(0, 10))
-    if TkinterDnD:
-        drop_area.drop_target_register(DND_FILES)
-        drop_area.dnd_bind("<<Drop>>", handle_drop)
+    register_drop_target(drop_area)
 
     media_info_label = tk.Label(window, textvariable=media_info_text, justify=tk.LEFT)
     media_info_label.pack(anchor=tk.W, padx=54, pady=(0, 4))
