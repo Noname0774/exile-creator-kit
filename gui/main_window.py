@@ -20,7 +20,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from core.export import ExportHistory, HistoryEntry  # noqa: E402
+from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
@@ -50,11 +50,12 @@ def create_window() -> tk.Tk:
     recent_exports_text = tk.StringVar(value="No exports yet.")
 
     export_history = ExportHistory()
+    export_queue = ExportQueue()
     output_folder_path = tk.StringVar(value="")
 
-    def get_output_path(file_path: str, script_name: str) -> Path:
+    def get_output_path(file_path: str, target: str) -> Path:
         path = Path(file_path)
-        suffix = "_youtube" if script_name == "export_to_youtube.py" else "_x"
+        suffix = "_youtube" if target == "YouTube" else "_x"
         return path.with_name(f"{path.stem}{suffix}.mp4")
 
     def get_export_target(script_name: str) -> str:
@@ -62,6 +63,12 @@ def create_window() -> tk.Tk:
             return "YouTube"
 
         return "X"
+
+    def get_export_script(target: str) -> str:
+        if target == "YouTube":
+            return "export_to_youtube.py"
+
+        return "export_to_x.py"
 
     def refresh_recent_exports() -> None:
         latest_entry = export_history.latest()
@@ -76,13 +83,13 @@ def create_window() -> tk.Tk:
             f"{latest_entry.timestamp}"
         )
 
-    def add_recent_export(input_path: str, output_path: Path, target: str) -> None:
+    def add_recent_export(job: ExportJob) -> None:
         export_history.add(
             HistoryEntry(
-                input_path=input_path,
-                output_path=str(output_path),
-                target=target,
-                status="Completed",
+                input_path=job.input_path,
+                output_path=job.output_path,
+                target=job.target,
+                status=job.status,
                 timestamp=datetime.now().strftime("%H:%M"),
             )
         )
@@ -162,8 +169,27 @@ def create_window() -> tk.Tk:
         set_open_output_button_enabled(False)
         progress_bar.start(10)
 
+        target = get_export_target(script_name)
+        output_path = get_output_path(file_path, target)
+        export_queue.add(
+            ExportJob(
+                input_path=file_path,
+                output_path=str(output_path),
+                target=target,
+                status="Queued",
+            )
+        )
+        queued_job = export_queue.pop()
+        if queued_job is None:
+            progress_bar.stop()
+            set_export_buttons_enabled(True)
+            export_status.set("Failed")
+            export_message.set("Unknown error.")
+            return
+
+        script_name = get_export_script(queued_job.target)
         try:
-            process = launch_export_workflow(script_name, file_path)
+            process = launch_export_workflow(script_name, queued_job.input_path)
         except OSError:
             progress_bar.stop()
             set_export_buttons_enabled(True)
@@ -172,23 +198,28 @@ def create_window() -> tk.Tk:
             return
 
         window.after(500, lambda: export_status.set("Encoding..."))
-        output_path = get_output_path(file_path, script_name)
-        target = get_export_target(script_name)
-        window.after(1000, lambda: watch_export(process, output_path, target))
+        window.after(1000, lambda: watch_export(process, queued_job))
 
-    def watch_export(process: subprocess.Popen, output_path: Path, target: str) -> None:
+    def watch_export(process: subprocess.Popen, job: ExportJob) -> None:
         if process.poll() is None:
-            window.after(1000, lambda: watch_export(process, output_path, target))
+            window.after(1000, lambda: watch_export(process, job))
             return
 
         progress_bar.stop()
         set_export_buttons_enabled(True)
         if process.returncode == 0:
             export_status.set("Completed")
+            output_path = Path(job.output_path)
+            completed_job = ExportJob(
+                input_path=job.input_path,
+                output_path=job.output_path,
+                target=job.target,
+                status="Completed",
+            )
             output_folder_path.set(str(output_path.parent))
             set_open_output_button_enabled(True)
             export_message.set(f"Saved to:\n{output_path}")
-            add_recent_export(selected_file_path.get(), output_path, target)
+            add_recent_export(completed_job)
         else:
             export_status.set("Failed")
             set_open_output_button_enabled(False)
