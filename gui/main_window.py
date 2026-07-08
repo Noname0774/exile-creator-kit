@@ -3,7 +3,7 @@
 import subprocess
 import sys
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 
 try:
@@ -17,10 +17,10 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
 
 
-def launch_export_workflow(script_name: str, file_path: str) -> None:
+def launch_export_workflow(script_name: str, file_path: str) -> subprocess.Popen:
     """Launch the existing export entry workflow."""
     script_path = ROOT_DIR / "tools" / script_name
-    subprocess.Popen(
+    return subprocess.Popen(
         [sys.executable, str(script_path), file_path],
         cwd=ROOT_DIR,
     )
@@ -30,9 +30,10 @@ def create_window() -> tk.Tk:
     """Create the prototype main window."""
     window = TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     window.title("Exile Creator Kit")
-    window.geometry("420x260")
+    window.geometry("420x320")
     selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
+    export_status = tk.StringVar(value="Idle")
 
     def set_selected_file(file_path: str) -> None:
         path = Path(file_path)
@@ -49,7 +50,20 @@ def create_window() -> tk.Tk:
             messagebox.showinfo("Exile Creator Kit", "Please choose a video first.")
             return
 
-        launch_export_workflow(script_name, file_path)
+        export_status.set("Preparing...")
+        progress_bar.start(10)
+
+        process = launch_export_workflow(script_name, file_path)
+        window.after(500, lambda: export_status.set("Encoding..."))
+        window.after(1000, lambda: watch_export(process))
+
+    def watch_export(process: subprocess.Popen) -> None:
+        if process.poll() is None:
+            window.after(1000, lambda: watch_export(process))
+            return
+
+        progress_bar.stop()
+        export_status.set("Completed")
 
     def choose_video() -> None:
         file_path = filedialog.askopenfilename(
@@ -106,6 +120,12 @@ def create_window() -> tk.Tk:
         command=lambda: export_selected("export_to_youtube.py"),
     )
     youtube_button.pack(side=tk.LEFT, padx=8)
+
+    status_label = tk.Label(window, textvariable=export_status)
+    status_label.pack(pady=(18, 6))
+
+    progress_bar = ttk.Progressbar(window, mode="indeterminate", length=280)
+    progress_bar.pack()
 
     return window
 
