@@ -39,6 +39,16 @@ def create_window() -> tk.Tk:
     export_status = tk.StringVar(value="Idle")
     export_message = tk.StringVar(value="")
 
+    def get_output_filename(file_path: str, script_name: str) -> str:
+        path = Path(file_path)
+        suffix = "_youtube" if script_name == "export_to_youtube.py" else "_x"
+        return f"{path.stem}{suffix}.mp4"
+
+    def set_export_buttons_enabled(is_enabled: bool) -> None:
+        state = tk.NORMAL if is_enabled else tk.DISABLED
+        x_button.config(state=state)
+        youtube_button.config(state=state)
+
     def set_selected_file(file_path: str) -> None:
         path = Path(file_path)
         if path.suffix.lower() not in SUPPORTED_VIDEO_EXTENSIONS:
@@ -58,33 +68,40 @@ def create_window() -> tk.Tk:
 
         if shutil.which("ffmpeg") is None:
             export_status.set("Failed")
-            export_message.set("FFmpeg not found.")
+            export_message.set(
+                "FFmpeg was not found.\n"
+                "Please install FFmpeg and restart Exile Creator Kit."
+            )
             return
 
         export_status.set("Preparing...")
         export_message.set("")
+        set_export_buttons_enabled(False)
         progress_bar.start(10)
 
         try:
             process = launch_export_workflow(script_name, file_path)
         except OSError:
             progress_bar.stop()
+            set_export_buttons_enabled(True)
             export_status.set("Failed")
             export_message.set("Unknown error.")
             return
 
         window.after(500, lambda: export_status.set("Encoding..."))
-        window.after(1000, lambda: watch_export(process))
+        output_filename = get_output_filename(file_path, script_name)
+        window.after(1000, lambda: watch_export(process, output_filename))
 
-    def watch_export(process: subprocess.Popen) -> None:
+    def watch_export(process: subprocess.Popen, output_filename: str) -> None:
         if process.poll() is None:
-            window.after(1000, lambda: watch_export(process))
+            window.after(1000, lambda: watch_export(process, output_filename))
             return
 
         progress_bar.stop()
+        set_export_buttons_enabled(True)
         if process.returncode == 0:
             export_status.set("Completed")
-            export_message.set("")
+            export_message.set(f"Saved as:\n{output_filename}")
         else:
             export_status.set("Failed")
             export_message.set("Export failed.")
