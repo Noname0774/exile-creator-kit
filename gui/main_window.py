@@ -55,6 +55,12 @@ def create_window() -> tk.Tk:
         x_button.config(state=state)
         youtube_button.config(state=state)
 
+    def format_file_size(file_size_mb: float) -> str:
+        if file_size_mb >= 1024:
+            return f"{file_size_mb / 1024:.2f} GB"
+
+        return f"{file_size_mb:.2f} MB"
+
     def set_media_info(file_path: str) -> None:
         try:
             media_info = MediaInspector().analyze(file_path)
@@ -62,11 +68,13 @@ def create_window() -> tk.Tk:
             media_info_text.set("Media information unavailable.")
             return
 
+        path = Path(file_path)
         media_info_text.set(
-            f"File name: {media_info.file_name}\n"
+            f"File: {path.name}\n"
+            f"Location: {path.parent}\n"
             f"Duration: {media_info.duration_text}\n"
-            f"Resolution: {media_info.width}x{media_info.height}\n"
-            f"File size: {media_info.file_size_mb:.2f} MB"
+            f"Resolution: {media_info.width} × {media_info.height}\n"
+            f"File size: {format_file_size(media_info.file_size_mb)}"
         )
 
     def set_selected_file(file_path: str) -> None:
