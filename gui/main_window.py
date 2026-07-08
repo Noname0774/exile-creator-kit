@@ -1,5 +1,6 @@
 """Prototype GUI window for Exile Creator Kit."""
 
+import shutil
 import subprocess
 import sys
 import tkinter as tk
@@ -23,6 +24,8 @@ def launch_export_workflow(script_name: str, file_path: str) -> subprocess.Popen
     return subprocess.Popen(
         [sys.executable, str(script_path), file_path],
         cwd=ROOT_DIR,
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
     )
 
 
@@ -34,6 +37,7 @@ def create_window() -> tk.Tk:
     selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
     export_status = tk.StringVar(value="Idle")
+    export_message = tk.StringVar(value="")
 
     def set_selected_file(file_path: str) -> None:
         path = Path(file_path)
@@ -47,13 +51,28 @@ def create_window() -> tk.Tk:
     def export_selected(script_name: str) -> None:
         file_path = selected_file_path.get()
         if not file_path:
+            export_status.set("Failed")
+            export_message.set("No video selected.")
             messagebox.showinfo("Exile Creator Kit", "Please choose a video first.")
             return
 
+        if shutil.which("ffmpeg") is None:
+            export_status.set("Failed")
+            export_message.set("FFmpeg not found.")
+            return
+
         export_status.set("Preparing...")
+        export_message.set("")
         progress_bar.start(10)
 
-        process = launch_export_workflow(script_name, file_path)
+        try:
+            process = launch_export_workflow(script_name, file_path)
+        except OSError:
+            progress_bar.stop()
+            export_status.set("Failed")
+            export_message.set("Unknown error.")
+            return
+
         window.after(500, lambda: export_status.set("Encoding..."))
         window.after(1000, lambda: watch_export(process))
 
@@ -65,8 +84,10 @@ def create_window() -> tk.Tk:
         progress_bar.stop()
         if process.returncode == 0:
             export_status.set("Completed")
+            export_message.set("")
         else:
             export_status.set("Failed")
+            export_message.set("Export failed.")
 
     def choose_video() -> None:
         file_path = filedialog.askopenfilename(
@@ -129,6 +150,9 @@ def create_window() -> tk.Tk:
 
     progress_bar = ttk.Progressbar(window, mode="indeterminate", length=280)
     progress_bar.pack()
+
+    message_label = tk.Label(window, textvariable=export_message)
+    message_label.pack(pady=(8, 0))
 
     return window
 
