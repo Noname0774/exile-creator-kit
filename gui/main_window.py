@@ -20,6 +20,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+from core.export import ExportHistory, HistoryEntry  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
@@ -48,6 +49,7 @@ def create_window() -> tk.Tk:
     export_message = tk.StringVar(value="")
     recent_exports_text = tk.StringVar(value="No exports yet.")
 
+    export_history = ExportHistory()
     output_folder_path = tk.StringVar(value="")
 
     def get_output_path(file_path: str, script_name: str) -> Path:
@@ -61,12 +63,30 @@ def create_window() -> tk.Tk:
 
         return "X"
 
-    recent_exports: list[str] = []
+    def refresh_recent_exports() -> None:
+        latest_entry = export_history.latest()
+        if latest_entry is None:
+            recent_exports_text.set("No exports yet.")
+            return
 
-    def add_recent_export(output_path: Path, target: str) -> None:
-        timestamp = datetime.now().strftime("%H:%M")
-        recent_exports.insert(0, f"{output_path.name} | {target} | Completed | {timestamp}")
-        recent_exports_text.set("\n".join(recent_exports[:5]))
+        recent_exports_text.set(
+            f"{Path(latest_entry.output_path).name} | "
+            f"{latest_entry.target} | "
+            f"{latest_entry.status} | "
+            f"{latest_entry.timestamp}"
+        )
+
+    def add_recent_export(input_path: str, output_path: Path, target: str) -> None:
+        export_history.add(
+            HistoryEntry(
+                input_path=input_path,
+                output_path=str(output_path),
+                target=target,
+                status="Completed",
+                timestamp=datetime.now().strftime("%H:%M"),
+            )
+        )
+        refresh_recent_exports()
 
     def set_export_buttons_enabled(is_enabled: bool) -> None:
         state = tk.NORMAL if is_enabled else tk.DISABLED
@@ -168,7 +188,7 @@ def create_window() -> tk.Tk:
             output_folder_path.set(str(output_path.parent))
             set_open_output_button_enabled(True)
             export_message.set(f"Saved to:\n{output_path}")
-            add_recent_export(output_path, target)
+            add_recent_export(selected_file_path.get(), output_path, target)
         else:
             export_status.set("Failed")
             set_open_output_button_enabled(False)
