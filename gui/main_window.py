@@ -128,6 +128,9 @@ def create_window() -> tk.Tk:
     title = tk.Label(window, text="Exile Creator Kit", font=("Segoe UI", 18, "bold"))
     title.pack(pady=(28, 20))
 
+    description = tk.Label(window, text="Create upload-ready videos for X and YouTube")
+    description.pack()
+
     drop_area = tk.Label(
         window,
         textvariable=selected_file_name,
@@ -148,7 +151,7 @@ def create_window() -> tk.Tk:
 
     x_button = tk.Button(
         button_frame,
-        text="X Export",
+        text="Export for X (512 MB)",
         width=16,
         command=lambda: export_selected("export_to_x.py"),
     )
@@ -156,7 +159,7 @@ def create_window() -> tk.Tk:
 
     youtube_button = tk.Button(
         button_frame,
-        text="YouTube Export",
+        text="Export for YouTube (High Quality)",
         width=16,
         command=lambda: export_selected("export_to_youtube.py"),
     )
