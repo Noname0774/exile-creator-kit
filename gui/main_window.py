@@ -1,13 +1,20 @@
 """Prototype GUI window for Exile Creator Kit."""
 
 import subprocess
-import tkinter as tk
 import sys
+import tkinter as tk
 from tkinter import filedialog, messagebox
 from pathlib import Path
 
+try:
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+except ImportError:
+    DND_FILES = ""
+    TkinterDnD = None
+
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
+SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
 
 
 def launch_export_workflow(script_name: str, file_path: str) -> None:
@@ -21,11 +28,20 @@ def launch_export_workflow(script_name: str, file_path: str) -> None:
 
 def create_window() -> tk.Tk:
     """Create the prototype main window."""
-    window = tk.Tk()
+    window = TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     window.title("Exile Creator Kit")
     window.geometry("420x260")
-    selected_file_name = tk.StringVar(value="No video selected")
+    selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
+
+    def set_selected_file(file_path: str) -> None:
+        path = Path(file_path)
+        if path.suffix.lower() not in SUPPORTED_VIDEO_EXTENSIONS:
+            messagebox.showinfo("Exile Creator Kit", "Please choose a video file.")
+            return
+
+        selected_file_path.set(str(path))
+        selected_file_name.set(path.name)
 
     def export_selected(script_name: str) -> None:
         file_path = selected_file_path.get()
@@ -47,8 +63,12 @@ def create_window() -> tk.Tk:
             ],
         )
         if file_path:
-            selected_file_path.set(file_path)
-            selected_file_name.set(Path(file_path).name)
+            set_selected_file(file_path)
+
+    def handle_drop(event) -> None:
+        dropped_paths = window.tk.splitlist(event.data)
+        if dropped_paths:
+            set_selected_file(dropped_paths[0])
 
     title = tk.Label(window, text="Exile Creator Kit", font=("Segoe UI", 18, "bold"))
     title.pack(pady=(28, 20))
@@ -61,6 +81,9 @@ def create_window() -> tk.Tk:
         height=3,
     )
     drop_area.pack(pady=(0, 10))
+    if TkinterDnD:
+        drop_area.drop_target_register(DND_FILES)
+        drop_area.dnd_bind("<<Drop>>", handle_drop)
 
     choose_button = tk.Button(window, text="Choose Video", width=18, command=choose_video)
     choose_button.pack(pady=(0, 18))
