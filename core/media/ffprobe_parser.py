@@ -23,7 +23,7 @@ class FFprobeParser:
             file_name=format_info.get("filename", ""),
             extension="",
             duration_seconds=duration_seconds,
-            duration_text="",
+            duration_text=self._format_duration(duration_seconds),
             file_size_bytes=file_size_bytes,
             file_size_mb=file_size_bytes / 1024 / 1024 if file_size_bytes else 0.0,
             width=self._to_int(video.get("width")),
@@ -58,3 +58,16 @@ class FFprobeParser:
             return 0.0
         return self._to_float(numerator) / denominator_value
 
+    def _format_duration(self, duration_seconds: float) -> str:
+        total_seconds = max(0, int(round(duration_seconds)))
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+
+        if hours > 0:
+            return f"{hours} hr {minutes:02d} min"
+
+        if minutes > 0:
+            return f"{minutes} min {seconds:02d} sec"
+
+        return f"{seconds} sec"
