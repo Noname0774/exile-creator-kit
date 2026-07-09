@@ -2,8 +2,8 @@
 
 from datetime import datetime
 import os
-import subprocess
 import sys
+import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
@@ -20,7 +20,9 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
+from core.export import XExporter, YouTubeExporter  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
+from core.media.smart_bitrate import SmartBitrate  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
 from gui.about_window import create_about_window  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
@@ -30,20 +32,60 @@ from tools.export_to_youtube import youtube_output_path  # noqa: E402
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
 
 
+class ExportWorker:
+    """Run an export in the background without assuming a source checkout."""
+
+    def __init__(self, target: str, input_path: str, output_path: str) -> None:
+        self.target = target
+        self.input_path = input_path
+        self.output_path = output_path
+        self.returncode: int | None = None
+        self.stdout = ""
+        self.stderr = ""
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def poll(self) -> int | None:
+        if self._thread.is_alive():
+            return None
+
+        return self.returncode
+
+    def communicate(self) -> tuple[str, str]:
+        return self.stdout, self.stderr
+
+    def _run(self) -> None:
+        try:
+            media_info = MediaInspector().analyze(self.input_path)
+            if self.target == "YouTube":
+                result_path = YouTubeExporter().execute(self.input_path, self.output_path)
+            else:
+                bitrate = SmartBitrate().calculate(media_info.duration_seconds)
+                result_path = XExporter().execute(
+                    self.input_path,
+                    self.output_path,
+                    bitrate,
+                )
+
+            self.stdout = f"Export result: {result_path}"
+            self.returncode = 0
+        except Exception as exc:
+            self.stderr = str(exc)
+            self.returncode = 1
+
+
 def launch_export_workflow(
     script_name: str,
     file_path: str,
     output_path: str,
-) -> subprocess.Popen:
-    """Launch the existing export entry workflow."""
-    script_path = ROOT_DIR / "tools" / script_name
-    return subprocess.Popen(
-        [sys.executable, str(script_path), file_path, output_path],
-        cwd=ROOT_DIR,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        text=True,
-    )
+) -> ExportWorker:
+    """Launch the existing export workflow."""
+    target = "YouTube" if script_name == "export_to_youtube.py" else "X"
+    worker = ExportWorker(target, file_path, output_path)
+    worker.start()
+    return worker
 
 
 def create_window() -> tk.Tk:
@@ -322,7 +364,7 @@ def create_window() -> tk.Tk:
         window.after(500, lambda: export_status.set("Encoding..."))
         window.after(1000, lambda: watch_export(process, queued_job))
 
-    def watch_export(process: subprocess.Popen, job: ExportJob) -> None:
+    def watch_export(process: ExportWorker, job: ExportJob) -> None:
         if process.poll() is None:
             window.after(1000, lambda: watch_export(process, job))
             return

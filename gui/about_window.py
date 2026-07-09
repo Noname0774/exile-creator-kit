@@ -1,16 +1,28 @@
 """About dialog for Exile Creator Kit."""
 
 from pathlib import Path
+import sys
 import tkinter as tk
 
 
 def get_version() -> str:
     """Return the canonical application version."""
-    version_file = Path(__file__).resolve().parents[1] / "VERSION"
-    try:
-        return version_file.read_text(encoding="utf-8").strip()
-    except OSError:
-        return "unknown"
+    candidates = [
+        Path(getattr(sys, "_MEIPASS", "")) / "VERSION",
+        Path(sys.executable).resolve().parent / "VERSION",
+        Path(__file__).resolve().parents[1] / "VERSION",
+    ]
+
+    for version_file in candidates:
+        try:
+            version = version_file.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+
+        if version:
+            return version
+
+    return "unknown"
 
 
 def create_about_window() -> tk.Toplevel:

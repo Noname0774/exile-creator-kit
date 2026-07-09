@@ -2,6 +2,7 @@
 
 import logging
 import subprocess
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -94,11 +95,14 @@ class SettingsService:
 
     def _resolve_executable_path(self, configured_path: str, default_name: str) -> str:
         if not configured_path:
-            return default_name
+            return self._default_executable_path(default_name)
 
         path_text = configured_path.strip()
         if not path_text:
-            return default_name
+            return self._default_executable_path(default_name)
+
+        if path_text.lower() in {default_name.lower(), f"{default_name.lower()}.exe"}:
+            return self._default_executable_path(default_name)
 
         path = Path(path_text)
         looks_like_file_path = path.is_absolute() or "\\" in path_text or "/" in path_text
@@ -108,9 +112,23 @@ class SettingsService:
                 path_text,
                 default_name,
             )
-            return default_name
+            return self._default_executable_path(default_name)
 
         return path_text
+
+    def _default_executable_path(self, executable_name: str) -> str:
+        executable_file = f"{executable_name}.exe"
+        candidates = [
+            Path(sys.executable).resolve().parent / executable_file,
+            Path(getattr(sys, "_MEIPASS", "")) / executable_file,
+            Path(__file__).resolve().parents[2] / "vendor" / "ffmpeg" / executable_file,
+        ]
+
+        for candidate in candidates:
+            if candidate.exists():
+                return str(candidate)
+
+        return executable_name
 
     def _require_executable(self, executable_path: str, display_name: str) -> None:
         if self._is_executable_available(executable_path):

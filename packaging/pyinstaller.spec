@@ -37,6 +37,7 @@ binaries += optional_binary(VENDOR_FFMPEG_DIR / "ffmpeg.exe", ".")
 binaries += optional_binary(VENDOR_FFMPEG_DIR / "ffprobe.exe", ".")
 
 datas = []
+datas += optional_binary(PROJECT_DIR / "VERSION", ".")
 datas += optional_data_tree(PROJECT_DIR / "assets" / "icons", "assets/icons")
 datas += optional_data_tree(PROJECT_DIR / "LICENSES", "LICENSES")
 datas += optional_data_tree(PROJECT_DIR / "tools", "tools")
