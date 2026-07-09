@@ -118,11 +118,16 @@ class SettingsService:
 
     def _default_executable_path(self, executable_name: str) -> str:
         executable_file = f"{executable_name}.exe"
+        executable_directory = Path(sys.executable).resolve().parent
         candidates = [
-            Path(sys.executable).resolve().parent / executable_file,
-            Path(getattr(sys, "_MEIPASS", "")) / executable_file,
+            executable_directory / executable_file,
+            executable_directory / "_internal" / executable_file,
             Path(__file__).resolve().parents[2] / "vendor" / "ffmpeg" / executable_file,
         ]
+
+        meipass = getattr(sys, "_MEIPASS", "")
+        if meipass:
+            candidates.insert(2, Path(meipass) / executable_file)
 
         for candidate in candidates:
             if candidate.exists():
