@@ -22,6 +22,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
+from core.settings import SettingsService  # noqa: E402
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
 
@@ -51,7 +52,22 @@ def create_window() -> tk.Tk:
 
     export_history = ExportHistory()
     export_queue = ExportQueue()
+    settings_service = SettingsService()
+    app_settings = settings_service.get_settings()
     output_folder_path = tk.StringVar(value="")
+
+    def get_last_selected_folder() -> str:
+        folder_path = app_settings.default_output_folder
+        if folder_path and Path(folder_path).exists():
+            return folder_path
+
+        return ""
+
+    def save_last_selected_folder(file_path: str) -> None:
+        nonlocal app_settings
+        app_settings = settings_service.update_settings(
+            default_output_folder=str(Path(file_path).parent)
+        )
 
     def get_output_path(file_path: str, target: str) -> Path:
         path = Path(file_path)
@@ -145,6 +161,7 @@ def create_window() -> tk.Tk:
         selected_file_path.set(str(path))
         selected_file_name.set(path.name)
         set_media_info(str(path))
+        save_last_selected_folder(str(path))
 
     def export_selected(script_name: str) -> None:
         file_path = selected_file_path.get()
@@ -228,6 +245,7 @@ def create_window() -> tk.Tk:
     def choose_video() -> None:
         file_path = filedialog.askopenfilename(
             title="Choose a video file",
+            initialdir=get_last_selected_folder(),
             filetypes=[
                 ("Video files", "*.mp4 *.mkv *.mov *.avi"),
                 ("MP4 files", "*.mp4"),
