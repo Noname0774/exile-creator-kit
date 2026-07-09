@@ -32,8 +32,7 @@ Just choose your video and export.
 ---
 
 # Screenshot
-
-> *(Insert `assets/screenshots/main-window.png` here.)*
+![Exile Creator Kit Main Window](assets/screenshots/main-window.png)
 
 ---
 
