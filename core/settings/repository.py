@@ -13,13 +13,18 @@ class SettingsRepository:
         self._file_path = Path(file_path)
 
     def load(self) -> AppSettings:
+        defaults = default_settings()
         if not self._file_path.exists():
-            return default_settings()
+            return defaults
 
         with self._file_path.open("r", encoding="utf-8") as settings_file:
             data = json.load(settings_file)
 
-        return AppSettings(**data)
+        merged_data = asdict(defaults)
+        merged_data.update(
+            {key: value for key, value in data.items() if key in merged_data}
+        )
+        return AppSettings(**merged_data)
 
     def save(self, settings: AppSettings) -> None:
         with self._file_path.open("w", encoding="utf-8") as settings_file:

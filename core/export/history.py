@@ -25,5 +25,8 @@ class ExportHistory:
 
         return self._entries[-1]
 
+    def entries(self) -> tuple[HistoryEntry, ...]:
+        return tuple(self._entries)
+
     def clear(self) -> None:
         self._entries.clear()

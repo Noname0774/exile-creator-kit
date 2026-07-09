@@ -4,6 +4,7 @@ import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, ttk
+from typing import Callable
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -16,7 +17,7 @@ from core.settings import SettingsService  # noqa: E402
 SETTINGS_SECTIONS = ("General", "X Export", "YouTube Export", "FFmpeg", "GUI")
 
 
-def create_settings_window() -> tk.Toplevel:
+def create_settings_window(on_saved: Callable[[], None] | None = None) -> tk.Toplevel:
     """Create the settings prototype window."""
     window = tk.Toplevel()
     window.title("Settings")
@@ -29,7 +30,7 @@ def create_settings_window() -> tk.Toplevel:
         value=settings.open_output_folder_after_export
     )
     remember_last_selected_folder = tk.BooleanVar(
-        value=bool(settings.default_output_folder)
+        value=settings.remember_last_selected_folder
     )
     save_status = tk.StringVar(value="")
 
@@ -45,13 +46,19 @@ def create_settings_window() -> tk.Toplevel:
     def save_general_settings() -> None:
         output_folder = default_output_folder.get().strip()
         if not remember_last_selected_folder.get():
-            output_folder = ""
+            last_selected_folder = ""
+        else:
+            last_selected_folder = settings.last_selected_folder
 
         settings_service.update_settings(
             default_output_folder=output_folder,
+            last_selected_folder=last_selected_folder,
+            remember_last_selected_folder=remember_last_selected_folder.get(),
             open_output_folder_after_export=open_output_folder_after_export.get(),
         )
         save_status.set("Saved.")
+        if on_saved:
+            on_saved()
 
     title = tk.Label(window, text="Settings", font=("Segoe UI", 16, "bold"))
     title.pack(pady=(20, 12))

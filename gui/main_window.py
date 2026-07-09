@@ -57,22 +57,40 @@ def create_window() -> tk.Tk:
     app_settings = settings_service.get_settings()
     output_folder_path = tk.StringVar(value="")
 
+    def reload_settings() -> None:
+        nonlocal app_settings
+        app_settings = settings_service.get_settings()
+
     def get_last_selected_folder() -> str:
-        folder_path = app_settings.default_output_folder
-        if folder_path and Path(folder_path).exists():
-            return folder_path
+        if app_settings.remember_last_selected_folder:
+            folder_path = app_settings.last_selected_folder
+            if folder_path and Path(folder_path).exists():
+                return folder_path
+
+        output_folder = app_settings.default_output_folder
+        if output_folder and Path(output_folder).exists():
+            return output_folder
 
         return ""
 
     def save_last_selected_folder(file_path: str) -> None:
         nonlocal app_settings
+        if not app_settings.remember_last_selected_folder:
+            return
+
         app_settings = settings_service.update_settings(
-            default_output_folder=str(Path(file_path).parent)
+            last_selected_folder=str(Path(file_path).parent)
         )
 
     def get_output_path(file_path: str, target: str) -> Path:
         path = Path(file_path)
         suffix = "_youtube" if target == "YouTube" else "_x"
+        output_folder = app_settings.default_output_folder
+        if output_folder:
+            output_directory = Path(output_folder)
+            if output_directory.exists():
+                return output_directory / f"{path.stem}{suffix}.mp4"
+
         return path.with_name(f"{path.stem}{suffix}.mp4")
 
     def get_export_target(script_name: str) -> str:
@@ -88,16 +106,19 @@ def create_window() -> tk.Tk:
         return "export_to_x.py"
 
     def refresh_recent_exports() -> None:
-        latest_entry = export_history.latest()
-        if latest_entry is None:
+        entries = export_history.entries()
+        if not entries:
             recent_exports_text.set("No exports yet.")
             return
 
         recent_exports_text.set(
-            f"{Path(latest_entry.output_path).name} | "
-            f"{latest_entry.target} | "
-            f"{latest_entry.status} | "
-            f"{latest_entry.timestamp}"
+            "\n".join(
+                f"{Path(entry.output_path).name} | "
+                f"{entry.target} | "
+                f"{entry.status} | "
+                f"{entry.timestamp}"
+                for entry in reversed(entries[-5:])
+            )
         )
 
     def add_recent_export(job: ExportJob) -> None:
@@ -121,8 +142,7 @@ def create_window() -> tk.Tk:
         state = tk.NORMAL if is_enabled else tk.DISABLED
         open_output_button.config(state=state)
 
-    def open_output_folder() -> None:
-        folder_path = output_folder_path.get()
+    def open_folder(folder_path: str) -> None:
         if not folder_path:
             return
 
@@ -130,6 +150,9 @@ def create_window() -> tk.Tk:
             os.startfile(folder_path)
         except OSError:
             messagebox.showinfo("Exile Creator Kit", "Output folder could not be opened.")
+
+    def open_output_folder() -> None:
+        open_folder(output_folder_path.get())
 
     def format_file_size(file_size_mb: float) -> str:
         if file_size_mb >= 1024:
@@ -238,6 +261,8 @@ def create_window() -> tk.Tk:
             set_open_output_button_enabled(True)
             export_message.set(f"Saved to:\n{output_path}")
             add_recent_export(completed_job)
+            if app_settings.open_output_folder_after_export:
+                open_folder(str(output_path.parent))
         else:
             export_status.set("Failed")
             set_open_output_button_enabled(False)
@@ -273,7 +298,7 @@ def create_window() -> tk.Tk:
         separator.pack(fill=tk.X, padx=28, pady=14)
 
     def open_settings_window() -> None:
-        create_settings_window()
+        create_settings_window(on_saved=reload_settings)
 
     register_drop_target(window)
 
