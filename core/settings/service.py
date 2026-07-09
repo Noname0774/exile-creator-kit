@@ -116,9 +116,10 @@ class SettingsService:
         if self._is_executable_available(executable_path):
             return
 
+        executable_name = display_name.upper() if display_name == "FFmpeg" else display_name
         raise RuntimeError(
-            f"{display_name} was not found. "
-            f"Please install {display_name} or update the configured path."
+            f"{display_name} was not found.\n"
+            f"Please install {executable_name} or update the configured path."
         )
 
     def _is_executable_available(self, executable_path: str) -> bool:

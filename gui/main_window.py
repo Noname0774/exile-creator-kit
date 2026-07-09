@@ -40,8 +40,9 @@ def launch_export_workflow(
     return subprocess.Popen(
         [sys.executable, str(script_path), file_path, output_path],
         cwd=ROOT_DIR,
-        stderr=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
     )
 
 
@@ -143,6 +144,63 @@ def create_window() -> tk.Tk:
         state = tk.NORMAL if is_enabled else tk.DISABLED
         open_output_button.config(state=state)
 
+    def user_friendly_error(error: object) -> str:
+        raw_message = str(error).strip()
+        message = raw_message.lower()
+
+        if "ffmpeg" in message and ("not found" in message or "is not recognized" in message):
+            return (
+                "FFmpeg was not found.\n"
+                "Please install FFmpeg or update the FFmpeg path in Settings."
+            )
+
+        if "ffprobe" in message and ("not found" in message or "is not recognized" in message):
+            return (
+                "FFprobe was not found.\n"
+                "Please install FFmpeg or update the FFprobe path in Settings."
+            )
+
+        if "permission denied" in message or "access is denied" in message:
+            return (
+                "Permission denied.\n"
+                "Please choose a different output folder or check folder permissions."
+            )
+
+        if (
+            "output folder unavailable" in message
+            or "no such file" in message
+            or "cannot find the path" in message
+        ):
+            return (
+                "Output folder unavailable.\n"
+                "Please choose an existing output folder in Settings."
+            )
+
+        if (
+            "invalid data" in message
+            or "moov atom not found" in message
+            or "could not find codec parameters" in message
+        ):
+            return (
+                "Invalid video file.\n"
+                "Please choose a playable video file and try again."
+            )
+
+        if raw_message:
+            return (
+                "Export failed.\n"
+                "Please check the selected video and export settings, then try again."
+            )
+
+        return (
+            "Export failed for an unknown reason.\n"
+            "Please try another video or check your export settings."
+        )
+
+    def set_failed_status(error: object) -> None:
+        export_status.set("Failed")
+        export_message.set(user_friendly_error(error))
+
     def open_folder(folder_path: str) -> None:
         if not folder_path:
             return
@@ -150,7 +208,11 @@ def create_window() -> tk.Tk:
         try:
             os.startfile(folder_path)
         except OSError:
-            messagebox.showinfo("Exile Creator Kit", "Output folder could not be opened.")
+            messagebox.showinfo(
+                "Exile Creator Kit",
+                "Output folder unavailable.\n"
+                "Please check that the folder exists and try again.",
+            )
 
     def open_output_folder() -> None:
         open_folder(output_folder_path.get())
@@ -164,8 +226,8 @@ def create_window() -> tk.Tk:
     def set_media_info(file_path: str) -> None:
         try:
             media_info = MediaInspector().analyze(file_path)
-        except RuntimeError:
-            media_info_text.set("Media information unavailable.")
+        except RuntimeError as exc:
+            media_info_text.set(user_friendly_error(exc))
             return
 
         path = Path(file_path)
@@ -204,11 +266,7 @@ def create_window() -> tk.Tk:
             return
 
         if not is_ffmpeg_available():
-            export_status.set("Failed")
-            export_message.set(
-                "FFmpeg was not found.\n"
-                "Please install FFmpeg and restart Exile Creator Kit."
-            )
+            set_failed_status("FFmpeg was not found.")
             return
 
         export_status.set("Preparing...")
@@ -232,22 +290,33 @@ def create_window() -> tk.Tk:
         if queued_job is None:
             progress_bar.stop()
             set_export_buttons_enabled(True)
-            export_status.set("Failed")
-            export_message.set("Unknown error.")
+            set_failed_status("")
             return
 
         script_name = get_export_script(queued_job.target)
+        output_parent = Path(queued_job.output_path).parent
+        if not output_parent.exists():
+            progress_bar.stop()
+            set_export_buttons_enabled(True)
+            set_failed_status("Output folder unavailable.")
+            return
+
+        if not os.access(output_parent, os.W_OK):
+            progress_bar.stop()
+            set_export_buttons_enabled(True)
+            set_failed_status("Permission denied.")
+            return
+
         try:
             process = launch_export_workflow(
                 script_name,
                 queued_job.input_path,
                 queued_job.output_path,
             )
-        except OSError:
+        except OSError as exc:
             progress_bar.stop()
             set_export_buttons_enabled(True)
-            export_status.set("Failed")
-            export_message.set("Unknown error.")
+            set_failed_status(exc)
             return
 
         window.after(500, lambda: export_status.set("Encoding..."))
@@ -276,9 +345,9 @@ def create_window() -> tk.Tk:
             if app_settings.open_output_folder_after_export:
                 open_folder(str(output_path.parent))
         else:
-            export_status.set("Failed")
             set_open_output_button_enabled(False)
-            export_message.set("Export failed.")
+            stdout, stderr = process.communicate()
+            set_failed_status(stderr or stdout)
             failed_job = ExportJob(
                 input_path=job.input_path,
                 output_path=job.output_path,
