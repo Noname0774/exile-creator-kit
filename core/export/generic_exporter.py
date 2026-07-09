@@ -3,13 +3,19 @@
 import subprocess
 
 from core.export.profile import ExportProfile
+from core.settings.service import SettingsService
 
 
 class GenericExporter:
     """Build and execute FFmpeg commands from an export profile."""
 
-    def __init__(self, profile: ExportProfile) -> None:
+    def __init__(
+        self,
+        profile: ExportProfile,
+        settings_service: SettingsService | None = None,
+    ) -> None:
         self.profile = profile
+        self._settings_service = settings_service or SettingsService()
 
     def export(
         self,
@@ -19,7 +25,7 @@ class GenericExporter:
     ) -> str:
         """Return an FFmpeg command built from the export profile."""
         command = [
-            "ffmpeg",
+            self._settings_service.get_ffmpeg_path(),
             "-y",
             "-i",
             input_path,

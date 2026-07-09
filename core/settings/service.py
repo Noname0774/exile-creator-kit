@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import replace
+from pathlib import Path
 
 from core.settings.defaults import default_settings
 from core.settings.model import AppSettings
@@ -42,6 +43,12 @@ class SettingsService:
         self.save(settings)
         return settings
 
+    def get_ffmpeg_path(self) -> str:
+        return self._resolve_executable_path(self.load().ffmpeg_path, "ffmpeg")
+
+    def get_ffprobe_path(self) -> str:
+        return self._resolve_executable_path(self.load().ffprobe_path, "ffprobe")
+
     def get_export_profile_overrides(self, target: str) -> dict[str, object]:
         settings = self.load()
         prefix = target.lower()
@@ -65,3 +72,23 @@ class SettingsService:
                     overrides[field] = value
 
         return overrides
+
+    def _resolve_executable_path(self, configured_path: str, default_name: str) -> str:
+        if not configured_path:
+            return default_name
+
+        path_text = configured_path.strip()
+        if not path_text:
+            return default_name
+
+        path = Path(path_text)
+        looks_like_file_path = path.is_absolute() or "\\" in path_text or "/" in path_text
+        if looks_like_file_path and not path.exists():
+            logger.warning(
+                "Configured executable path does not exist: %s. Using default: %s.",
+                path_text,
+                default_name,
+            )
+            return default_name
+
+        return path_text
