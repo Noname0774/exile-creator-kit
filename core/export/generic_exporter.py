@@ -32,7 +32,7 @@ class GenericExporter:
         if self.profile.quality:
             command.extend(["-cq", self.profile.quality])
 
-        if video_bitrate is not None:
+        if self.profile.smart_bitrate and video_bitrate is not None:
             command.extend(["-b:v", str(video_bitrate)])
 
         if self.profile.pixel_format:
@@ -65,4 +65,3 @@ class GenericExporter:
             raise RuntimeError(message)
 
         return output_path
-

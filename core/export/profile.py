@@ -16,6 +16,7 @@ class ExportProfile:
     audio_bitrate: str
     faststart: bool
     pixel_format: str
+    smart_bitrate: bool = True
 
     @classmethod
     def x(cls, settings_service: SettingsService | None = None) -> "ExportProfile":
@@ -30,6 +31,7 @@ class ExportProfile:
                 "audio_bitrate": "128k",
                 "faststart": True,
                 "pixel_format": "yuv420p",
+                "smart_bitrate": True,
             },
             settings_service=settings_service,
         )
@@ -47,6 +49,7 @@ class ExportProfile:
                 "audio_bitrate": "320k",
                 "faststart": True,
                 "pixel_format": "yuv420p",
+                "smart_bitrate": False,
             },
             settings_service=settings_service,
         )

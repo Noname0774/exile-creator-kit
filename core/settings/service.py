@@ -37,6 +37,7 @@ class SettingsService:
         settings = self.load()
         prefix = target.lower()
         fields = (
+            "smart_bitrate",
             "video_codec",
             "audio_codec",
             "preset",
