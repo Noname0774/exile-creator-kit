@@ -12,3 +12,11 @@ class AppSettings:
     default_export_target: str
     ffmpeg_path: str
     ffprobe_path: str
+    x_smart_bitrate: bool
+    x_audio_bitrate: str
+    x_preset: str
+    x_pixel_format: str
+    youtube_quality: str
+    youtube_audio_bitrate: str
+    youtube_pixel_format: str
+    youtube_faststart: bool

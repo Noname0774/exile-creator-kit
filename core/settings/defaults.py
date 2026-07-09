@@ -12,4 +12,12 @@ def default_settings() -> AppSettings:
         default_export_target="X",
         ffmpeg_path="ffmpeg",
         ffprobe_path="ffprobe",
+        x_smart_bitrate=True,
+        x_audio_bitrate="128k",
+        x_preset="p5",
+        x_pixel_format="yuv420p",
+        youtube_quality="18",
+        youtube_audio_bitrate="320k",
+        youtube_pixel_format="yuv420p",
+        youtube_faststart=True,
     )
