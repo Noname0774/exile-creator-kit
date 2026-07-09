@@ -32,3 +32,26 @@ class SettingsService:
         settings = replace(self.load(), **changes)
         self.save(settings)
         return settings
+
+    def get_export_profile_overrides(self, target: str) -> dict[str, object]:
+        settings = self.load()
+        prefix = target.lower()
+        fields = (
+            "video_codec",
+            "audio_codec",
+            "preset",
+            "quality",
+            "audio_bitrate",
+            "faststart",
+            "pixel_format",
+        )
+        overrides: dict[str, object] = {}
+
+        for field in fields:
+            setting_name = f"{prefix}_{field}"
+            if hasattr(settings, setting_name):
+                value = getattr(settings, setting_name)
+                if value not in ("", None):
+                    overrides[field] = value
+
+        return overrides
