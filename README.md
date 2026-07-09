@@ -74,3 +74,7 @@ D:\ExileCreatorKit
 - `docs/DEVELOPMENT_GUIDE.md`: development rules
 - `docs/RELEASE_CHECKLIST.md`: release validation checklist
 - `docs/DEV_LOG.md`: completed work log
+
+## License
+
+Exile Creator Kit is licensed under the MIT License.
