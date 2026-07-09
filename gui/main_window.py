@@ -2,9 +2,11 @@
 
 from datetime import datetime
 import os
+import subprocess
 import sys
 import threading
 import tkinter as tk
+import traceback
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 
@@ -40,8 +42,10 @@ class ExportWorker:
         self.input_path = input_path
         self.output_path = output_path
         self.returncode: int | None = None
+        self.command = ""
         self.stdout = ""
         self.stderr = ""
+        self.traceback_text = ""
         self._thread = threading.Thread(target=self._run, daemon=True)
 
     def start(self) -> None:
@@ -60,19 +64,30 @@ class ExportWorker:
         try:
             media_info = MediaInspector().analyze(self.input_path)
             if self.target == "YouTube":
-                result_path = YouTubeExporter().execute(self.input_path, self.output_path)
+                self.command = YouTubeExporter().export(
+                    self.input_path,
+                    self.output_path,
+                )
             else:
                 bitrate = SmartBitrate().calculate(media_info.duration_seconds)
-                result_path = XExporter().execute(
+                self.command = XExporter().export(
                     self.input_path,
                     self.output_path,
                     bitrate,
                 )
 
-            self.stdout = f"Export result: {result_path}"
-            self.returncode = 0
+            result = subprocess.run(
+                self.command,
+                capture_output=True,
+                shell=True,
+                text=True,
+            )
+            self.stdout = result.stdout
+            self.stderr = result.stderr
+            self.returncode = result.returncode
         except Exception as exc:
             self.stderr = str(exc)
+            self.traceback_text = traceback.format_exc()
             self.returncode = 1
 
 
@@ -105,6 +120,7 @@ def create_window() -> tk.Tk:
     settings_service = SettingsService()
     app_settings = settings_service.get_settings()
     output_folder_path = tk.StringVar(value="")
+    log_folder_path = tk.StringVar(value="")
 
     def reload_settings() -> None:
         nonlocal app_settings
@@ -186,6 +202,76 @@ def create_window() -> tk.Tk:
         state = tk.NORMAL if is_enabled else tk.DISABLED
         open_output_button.config(state=state)
 
+    def set_open_log_button_enabled(is_enabled: bool) -> None:
+        state = tk.NORMAL if is_enabled else tk.DISABLED
+        open_log_button.config(state=state)
+
+    def get_log_folder() -> Path:
+        app_data = os.environ.get("APPDATA")
+        if app_data:
+            return Path(app_data) / "ExileCreatorKit" / "logs"
+
+        return Path.home() / ".exile-creator-kit" / "logs"
+
+    def next_export_log_path(log_folder: Path) -> Path:
+        date_text = datetime.now().strftime("%Y-%m-%d")
+        for index in range(1, 1000):
+            candidate = log_folder / f"export-{date_text}-{index:03d}.log"
+            if not candidate.exists():
+                return candidate
+
+        time_text = datetime.now().strftime("%H%M%S")
+        return log_folder / f"export-{date_text}-{time_text}.log"
+
+    def get_application_version() -> str:
+        version_path = ROOT_DIR / "VERSION"
+        try:
+            return version_path.read_text(encoding="utf-8").strip() or "unknown"
+        except OSError:
+            return "unknown"
+
+    def write_export_failure_log(
+        process: ExportWorker,
+        job: ExportJob,
+        stdout: str,
+        stderr: str,
+    ) -> Path | None:
+        try:
+            log_folder = get_log_folder()
+            log_folder.mkdir(parents=True, exist_ok=True)
+            log_path = next_export_log_path(log_folder)
+            log_path.write_text(
+                "\n".join(
+                    [
+                        "Exile Creator Kit Export Failure",
+                        f"Version: {get_application_version()}",
+                        f"Timestamp: {datetime.now().isoformat(timespec='seconds')}",
+                        "",
+                        "Python traceback:",
+                        process.traceback_text.strip() or "(not available)",
+                        "",
+                        f"Selected preset: {job.target}",
+                        f"Input file: {job.input_path}",
+                        f"Output file: {job.output_path}",
+                        f"FFmpeg exit code: {process.returncode}",
+                        "",
+                        "Executed command:",
+                        process.command or "(command was not generated)",
+                        "",
+                        "stdout:",
+                        stdout or "(empty)",
+                        "",
+                        "stderr:",
+                        stderr or "(empty)",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            return log_path
+        except OSError:
+            return None
+
     def user_friendly_error(error: object) -> str:
         raw_message = str(error).strip()
         message = raw_message.lower()
@@ -259,6 +345,9 @@ def create_window() -> tk.Tk:
     def open_output_folder() -> None:
         open_folder(output_folder_path.get())
 
+    def open_log_folder() -> None:
+        open_folder(log_folder_path.get())
+
     def format_file_size(file_size_mb: float) -> str:
         if file_size_mb >= 1024:
             return f"{file_size_mb / 1024:.2f} GB"
@@ -314,8 +403,10 @@ def create_window() -> tk.Tk:
         export_status.set("Preparing...")
         export_message.set("")
         output_folder_path.set("")
+        log_folder_path.set("")
         set_export_buttons_enabled(False)
         set_open_output_button_enabled(False)
+        set_open_log_button_enabled(False)
         progress_bar.start(10)
 
         target = get_export_target(script_name)
@@ -389,7 +480,12 @@ def create_window() -> tk.Tk:
         else:
             set_open_output_button_enabled(False)
             stdout, stderr = process.communicate()
-            set_failed_status(stderr or stdout)
+            log_path = write_export_failure_log(process, job, stdout, stderr)
+            export_status.set("Failed")
+            export_message.set("Export failed.\nSee the generated log for details.")
+            if log_path:
+                log_folder_path.set(str(log_path.parent))
+                set_open_log_button_enabled(True)
             failed_job = ExportJob(
                 input_path=job.input_path,
                 output_path=job.output_path,
@@ -530,6 +626,15 @@ def create_window() -> tk.Tk:
         command=open_output_folder,
     )
     open_output_button.pack(pady=(8, 0))
+
+    open_log_button = tk.Button(
+        window,
+        text="Open Log Folder",
+        width=22,
+        state=tk.DISABLED,
+        command=open_log_folder,
+    )
+    open_log_button.pack(pady=(8, 0))
 
     add_separator()
 
