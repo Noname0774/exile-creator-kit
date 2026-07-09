@@ -1,6 +1,16 @@
 """About dialog for Exile Creator Kit."""
 
+from pathlib import Path
 import tkinter as tk
+
+
+def get_version() -> str:
+    """Return the canonical application version."""
+    version_file = Path(__file__).resolve().parents[1] / "VERSION"
+    try:
+        return version_file.read_text(encoding="utf-8").strip()
+    except OSError:
+        return "unknown"
 
 
 def create_about_window() -> tk.Toplevel:
@@ -19,7 +29,7 @@ def create_about_window() -> tk.Toplevel:
             "Application name:\n"
             "Exile Creator Kit\n\n"
             "Version:\n"
-            "v0.4.0-alpha\n\n"
+            f"{get_version()}\n\n"
             "Description:\n"
             "Create upload-ready videos for X and YouTube.\n\n"
             "Author:\n"

@@ -4,6 +4,10 @@ Exile Creator Kit is a desktop video export tool for Path of Exile and Path of E
 
 It helps creators turn gameplay videos into upload-ready files for X and YouTube without needing to understand FFmpeg commands, codecs, or bitrate details.
 
+## Version
+
+Current release version: `v1.0.0`
+
 ## v1.0 Goal
 
 Create upload-ready videos for X and YouTube.
