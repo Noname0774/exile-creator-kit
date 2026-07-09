@@ -1,51 +1,56 @@
 # Current Spec
 
-Last updated: 2026-07-08
+Last updated: 2026-07-09
 
 ## Project Purpose
 
-Exile Creator Kit is a shared video creation tool project for Path of Exile and Path of Exile 2.
+Exile Creator Kit is a desktop video export tool for Path of Exile and Path of Exile 2 creators.
+
+The v1.0 goal is to help creators produce upload-ready videos for X and YouTube without needing to understand FFmpeg details.
 
 ## Current Scope
 
-- Use FFmpeg for video processing.
-- Use NVIDIA NVENC hardware encoding.
+- Desktop GUI is the primary user entry point.
+- Supported export targets are X and YouTube.
+- FFmpeg is used for video export.
+- FFprobe is used for media analysis.
 - Preferred hardware encoder: NVIDIA NVENC when available.
-- Keep the workflow simple and foundation-focused before adding user-facing integrations.
+- Smart Bitrate is used for the X 512 MB-oriented workflow.
+- Settings are loaded and saved through the settings system.
+- Export history and export queue models support the GUI workflow.
 
-## First Feature
+## Supported Input Files
 
-The first feature is video compression for X (Twitter).
+- `.mp4`
+- `.mkv`
+- `.mov`
+- `.avi`
 
-The project should prioritize producing videos suitable for posting to X while keeping the implementation limited to the agreed scope.
+## User Workflow
 
-## Smart Bitrate Calculation
-
-Smart Bitrate Calculation is a planned specification for automatically calculating the optimal video bitrate from the video's duration.
-
-The purpose is to produce an output video that stays at or below 512 MB while preserving as much quality as possible within that file size limit.
-
-### Requirements
-
-- Calculate the target bitrate from the source video duration.
-- Use 512 MB as the maximum output file size.
-- Choose the highest practical bitrate that keeps the estimated output size at or below 512 MB.
-- Reserve enough room for audio bitrate and container overhead when calculating the video bitrate.
-- Keep the calculation deterministic so the same duration and settings produce the same target bitrate.
-
-### Current Status
-
-This is a specification only.
-
-No Smart Bitrate Calculation implementation exists yet, and this update does not add code or change scripts.
+```text
+Open Exile Creator Kit
+        |
+Choose or drop a video
+        |
+Review selected-video information
+        |
+Choose an export target
+        |
+Export video
+        |
+Review result and open output folder
+```
 
 ## Media Inspector
 
-Media Inspector is a shared module for analyzing video files.
+Media Inspector is the shared module for analyzing video files.
 
-### Purpose
+### Role
 
-Analyze video files and expose media metadata for other modules.
+- Analyze video files.
+- Return media metadata as a MediaInfo instance.
+- Do not convert, transcode, compress, or modify video files.
 
 ### Information To Retrieve
 
@@ -60,56 +65,105 @@ Analyze video files and expose media metadata for other modules.
 - Video bitrate
 - Audio bitrate
 - Total bitrate
-- Estimated bitrate for the 512 MB limit
 
-### MediaInfo
+## Smart Bitrate
 
-MediaInfo is designed as a dataclass that holds analyzed media metadata.
-
-Fields:
-
-- file_name
-- extension
-- duration_seconds
-- file_size_bytes
-- video_codec
-- audio_codec
-- width
-- height
-- fps
-- video_bitrate
-- audio_bitrate
-- total_bitrate
-- estimated_512mb_limit_bitrate
-
-MediaInspector analyzes a video file and returns a MediaInfo instance.
+Smart Bitrate calculates a recommended video bitrate for X exports.
 
 ### Role
 
-This module only analyzes video files.
+- Use video duration to calculate a target video bitrate.
+- Keep the X export workflow oriented around a 512 MB output limit.
+- Reserve room for audio bitrate and container overhead.
+- Clamp extremely short and extremely long videos to reasonable limits.
 
-It does not convert, transcode, compress, or otherwise modify video files.
+## Export Targets
+
+### X
+
+The X export workflow is optimized for posting videos to X.
+
+- H.264 output
+- AAC audio
+- Smart Bitrate for the 512 MB-oriented workflow
+- Fast start metadata when supported
+- User-facing label: `Export for X (512 MB)`
+
+### YouTube
+
+The YouTube export workflow is a higher-quality export for upload.
+
+- H.264 output
+- AAC audio
+- Higher-quality export profile than X
+- Fast start metadata when supported
+- User-facing label: `Export for YouTube (High Quality)`
+
+## GUI
+
+The GUI should allow the user to:
+
+- choose a video file
+- drag and drop a supported video file
+- view selected-video information
+- start X export
+- start YouTube export
+- see progress and result status
+- see friendly error messages
+- open the output folder after export
+- view recent exports
+- open Settings
+- open About
+
+## Settings
+
+Settings are managed through SettingsService.
+
+Current General settings include:
+
+- default output folder
+- open output folder after export
+- remember last selected folder
+- last selected folder
+
+## Release Scope
+
+v1.0 includes:
+
+- Desktop GUI
+- Media Inspector
+- Smart Bitrate for X
+- X export
+- YouTube export
+- Settings
+- Recent Exports
+- Export queue foundation
+- Export history foundation
+- Release checklist
+
+v1.0 excludes:
+
+- OBS integration
+- Publishing account integration
+- Automatic upload to X
+- Automatic upload to YouTube
+- Timeline editing
+- Clip cutting
+- Subtitle editing
+- Thumbnail generation
+- Plugin system
 
 ## Video File Policy
 
 Video files are not managed by Git.
 
-Use this external storage location for source videos, generated videos, and other large media files:
+Use an external storage location for source videos, generated videos, and other large media files.
+
+The project default media storage location is:
 
 ```text
 D:\ExileCreatorKit
 ```
-
-## Current Non-Goals
-
-The following work must not be added in the current phase:
-
-- GUI
-- YouTube support
-- Right-click registration
-- Smart Bitrate Calculation implementation
-- Batch file changes
-- New features beyond the initial X video compression direction
 
 ## Protected Areas
 
