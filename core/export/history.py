@@ -5,6 +5,8 @@ import logging
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from core.storage.path_resolver import app_data_file, migrate_legacy_json_file
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,8 +22,12 @@ class HistoryEntry:
 class ExportHistory:
     MAX_ENTRIES = 100
 
-    def __init__(self, file_path: str | Path = "export_history.json") -> None:
-        self._file_path = Path(file_path)
+    def __init__(self, file_path: str | Path | None = None) -> None:
+        if file_path is None:
+            self._file_path = app_data_file("export_history.json")
+            migrate_legacy_json_file(self._file_path, "export_history.json", list)
+        else:
+            self._file_path = Path(file_path)
         self._entries: list[HistoryEntry] = self._load()
 
     def add(self, entry: HistoryEntry) -> None:
@@ -43,6 +49,10 @@ class ExportHistory:
         self._save()
 
     def _load(self) -> list[HistoryEntry]:
+        if self._file_path is None:
+            logger.warning("Export history storage unavailable. Using empty history.")
+            return []
+
         if not self._file_path.exists():
             return []
 
@@ -78,7 +88,12 @@ class ExportHistory:
         return entries
 
     def _save(self) -> None:
+        if self._file_path is None:
+            logger.warning("Export history storage unavailable. Save skipped.")
+            return
+
         try:
+            self._file_path.parent.mkdir(parents=True, exist_ok=True)
             with self._file_path.open("w", encoding="utf-8") as history_file:
                 json.dump(
                     [asdict(entry) for entry in self._entries[-self.MAX_ENTRIES :]],
