@@ -2,7 +2,6 @@
 
 from datetime import datetime
 import os
-import shutil
 import subprocess
 import sys
 import tkinter as tk
@@ -189,6 +188,13 @@ def create_window() -> tk.Tk:
         set_media_info(str(path))
         save_last_selected_folder(str(path))
 
+    def is_ffmpeg_available() -> bool:
+        availability_check = getattr(settings_service, "is_ffmpeg_available", None)
+        if callable(availability_check):
+            return bool(availability_check())
+
+        return bool(settings_service.get_ffmpeg_path())
+
     def export_selected(script_name: str) -> None:
         file_path = selected_file_path.get()
         if not file_path:
@@ -197,7 +203,7 @@ def create_window() -> tk.Tk:
             messagebox.showinfo("Exile Creator Kit", "Please choose a video first.")
             return
 
-        if shutil.which("ffmpeg") is None:
+        if not is_ffmpeg_available():
             export_status.set("Failed")
             export_message.set(
                 "FFmpeg was not found.\n"
