@@ -9,15 +9,26 @@ sys.path.insert(0, str(ROOT_DIR))
 from core.export import YouTubeExporter  # noqa: E402
 from core.export.profile import ExportProfile  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
+from tools.export_to_x import resolve_output_path  # noqa: E402
+
+
+def youtube_output_path(
+    input_path: str | Path,
+    output_path: str | Path | None = None,
+) -> Path:
+    return resolve_output_path(input_path, "_youtube", output_path)
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("Usage: python tools/export_to_youtube.py <media-file>")
+    if len(sys.argv) not in (2, 3):
+        print("Usage: python tools/export_to_youtube.py <media-file> [output-file]")
         return 1
 
     input_path = Path(sys.argv[1]).resolve()
-    output_path = input_path.with_name(f"{input_path.stem}_youtube.mp4")
+    output_path = youtube_output_path(
+        input_path,
+        sys.argv[2] if len(sys.argv) == 3 else None,
+    )
 
     media_info = MediaInspector().analyze(str(input_path))
     profile = ExportProfile.youtube()

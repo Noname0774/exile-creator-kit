@@ -25,15 +25,21 @@ from core.media.inspector import MediaInspector  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
 from gui.about_window import create_about_window  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
+from tools.export_to_x import x_output_path  # noqa: E402
+from tools.export_to_youtube import youtube_output_path  # noqa: E402
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
 
 
-def launch_export_workflow(script_name: str, file_path: str) -> subprocess.Popen:
+def launch_export_workflow(
+    script_name: str,
+    file_path: str,
+    output_path: str,
+) -> subprocess.Popen:
     """Launch the existing export entry workflow."""
     script_path = ROOT_DIR / "tools" / script_name
     return subprocess.Popen(
-        [sys.executable, str(script_path), file_path],
+        [sys.executable, str(script_path), file_path, output_path],
         cwd=ROOT_DIR,
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
@@ -83,17 +89,6 @@ def create_window() -> tk.Tk:
             last_selected_folder=str(Path(file_path).parent)
         )
 
-    def get_output_path(file_path: str, target: str) -> Path:
-        path = Path(file_path)
-        suffix = "_youtube" if target == "YouTube" else "_x"
-        output_folder = app_settings.default_output_folder
-        if output_folder:
-            output_directory = Path(output_folder)
-            if output_directory.exists():
-                return output_directory / f"{path.stem}{suffix}.mp4"
-
-        return path.with_name(f"{path.stem}{suffix}.mp4")
-
     def get_export_target(script_name: str) -> str:
         if script_name == "export_to_youtube.py":
             return "YouTube"
@@ -105,6 +100,12 @@ def create_window() -> tk.Tk:
             return "export_to_youtube.py"
 
         return "export_to_x.py"
+
+    def get_output_path(file_path: str, target: str) -> Path:
+        if target == "YouTube":
+            return youtube_output_path(file_path)
+
+        return x_output_path(file_path)
 
     def refresh_recent_exports() -> None:
         entries = export_history.entries()
@@ -231,7 +232,11 @@ def create_window() -> tk.Tk:
 
         script_name = get_export_script(queued_job.target)
         try:
-            process = launch_export_workflow(script_name, queued_job.input_path)
+            process = launch_export_workflow(
+                script_name,
+                queued_job.input_path,
+                queued_job.output_path,
+            )
         except OSError:
             progress_bar.stop()
             set_export_buttons_enabled(True)
