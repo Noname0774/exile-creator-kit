@@ -1,0 +1,58 @@
+FFmpeg Notice
+=============
+
+Exile Creator Kit bundles FFmpeg and FFprobe for video analysis and export.
+
+Bundled binaries:
+
+- vendor/ffmpeg/ffmpeg.exe
+- vendor/ffmpeg/ffprobe.exe
+
+Observed bundled build:
+
+```text
+ffmpeg version 2026-07-06-git-c6498178bb-essentials_build-www.gyan.dev
+ffprobe version 2026-07-06-git-c6498178bb-essentials_build-www.gyan.dev
+```
+
+Observed build configuration includes:
+
+```text
+--enable-gpl
+--enable-version3
+--enable-nvenc
+--enable-ffnvcodec
+```
+
+License note:
+
+This bundled FFmpeg build appears to be a GPL/version3-enabled build.
+Before publishing a public release, confirm the exact license obligations for
+the selected FFmpeg distribution and include the matching license text and
+source-code availability information required by that distribution.
+
+Recommended source:
+
+```text
+https://www.gyan.dev/ffmpeg/builds/
+```
+
+Required release actions:
+
+- Confirm the selected FFmpeg build may be redistributed.
+- Include the exact FFmpeg license terms that apply to this build.
+- Include source-code availability information or an appropriate source offer.
+- Keep FFmpeg and FFprobe from the same distribution package.
+- Update this notice whenever FFmpeg binaries are replaced.
+
+FFmpeg project:
+
+```text
+https://ffmpeg.org/
+```
+
+FFmpeg source:
+
+```text
+https://git.ffmpeg.org/ffmpeg.git
+```

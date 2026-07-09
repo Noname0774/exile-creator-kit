@@ -1,0 +1,121 @@
+Third-Party Notices
+===================
+
+This file lists third-party software expected in the Exile Creator Kit public
+release package.
+
+Before publishing v1.0, verify final package contents and update versions if
+they differ from the build output.
+
+Python
+------
+
+Purpose:
+
+- Application runtime for the packaged desktop app.
+
+License:
+
+- Python Software Foundation License.
+
+Project:
+
+```text
+https://www.python.org/
+```
+
+PyInstaller
+-----------
+
+Purpose:
+
+- Windows packaging tool used to create the distributable onedir build.
+
+License:
+
+- GPLv2-or-later with a bootloader exception.
+
+Project:
+
+```text
+https://pyinstaller.org/
+```
+
+tkinter / Tcl / Tk
+------------------
+
+Purpose:
+
+- Desktop GUI toolkit used by the application.
+
+License:
+
+- Tcl/Tk license terms apply to bundled Tcl/Tk runtime files.
+
+Project:
+
+```text
+https://www.tcl.tk/
+```
+
+tkinterdnd2
+-----------
+
+Purpose:
+
+- Native drag-and-drop support in the desktop GUI.
+
+License:
+
+- Verify the installed package license before publishing.
+
+Project:
+
+```text
+https://github.com/pmgagne/tkinterdnd2
+```
+
+FFmpeg and FFprobe
+------------------
+
+Purpose:
+
+- Media analysis and video export.
+
+Bundled build observed:
+
+```text
+2026-07-06-git-c6498178bb-essentials_build-www.gyan.dev
+```
+
+License:
+
+- The observed build includes `--enable-gpl` and `--enable-version3`.
+- Treat this as a GPL/version3-enabled bundled dependency until confirmed.
+- See `LICENSES/FFmpeg.txt`.
+
+Project:
+
+```text
+https://ffmpeg.org/
+```
+
+Microsoft Visual C++ Runtime
+----------------------------
+
+Purpose:
+
+- Runtime DLLs may be included by PyInstaller in the packaged output.
+
+License:
+
+- Microsoft runtime redistribution terms apply.
+
+Release Checklist
+-----------------
+
+- Confirm every bundled dependency in `dist/ExileCreatorKit`.
+- Confirm each dependency license.
+- Include required license text or notices.
+- Include FFmpeg source-code availability information if required.
+- Do not publish until legal obligations are reviewed.
