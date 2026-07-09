@@ -1,5 +1,10 @@
 # Exile Creator Kit
 
+> **Download the app from the Releases page:**  
+> [ExileCreatorKit-v1.0.0.zip](https://github.com/Noname0774/exile-creator-kit/releases/latest)
+>
+> Do **not** use **Code → Download ZIP** unless you want the source code.
+
 > **Share your best Path of Exile moments. Effortlessly.**
 
 Create upload-ready videos for **X** and **YouTube** in just a few clicks.
@@ -32,6 +37,7 @@ Just choose your video and export.
 ---
 
 # Screenshot
+
 ![Exile Creator Kit Main Window](assets/screenshots/main-window.png)
 
 ---
