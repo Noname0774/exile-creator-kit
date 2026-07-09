@@ -279,6 +279,13 @@ def create_window() -> tk.Tk:
             export_status.set("Failed")
             set_open_output_button_enabled(False)
             export_message.set("Export failed.")
+            failed_job = ExportJob(
+                input_path=job.input_path,
+                output_path=job.output_path,
+                target=job.target,
+                status="Failed",
+            )
+            add_recent_export(failed_job)
 
     def choose_video() -> None:
         file_path = filedialog.askopenfilename(
