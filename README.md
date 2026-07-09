@@ -1,84 +1,148 @@
 # Exile Creator Kit
 
-Exile Creator Kit is a desktop video export tool for Path of Exile and Path of Exile 2 creators.
+> **Share your best Path of Exile moments. Effortlessly.**
 
-It helps creators turn gameplay videos into upload-ready files for X and YouTube without needing to understand FFmpeg commands, codecs, or bitrate details.
+Create upload-ready videos for **X** and **YouTube** in just a few clicks.
 
-## Version
+Exile Creator Kit (ECK) is a free and open-source Windows application designed for **Path of Exile players and content creators** who want to share great gameplay without learning FFmpeg or dealing with complicated export settings.
 
-Current release version: `v1.0.0`
+---
 
-## v1.0 Goal
+## ✨ Why Exile Creator Kit?
 
-Create upload-ready videos for X and YouTube.
+Most players don't want to learn video encoding.
 
-The v1.0 workflow is:
+They simply want to:
 
-```text
-Choose or drop a video
-        |
-Review media information
-        |
-Choose X or YouTube export
-        |
-Export video
-        |
-Open the output folder
-```
+- Clip an amazing boss kill.
+- Share it on X.
+- Upload it to YouTube.
+- Get back into the game.
 
-## v1.0 Features
+ECK removes the technical barriers.
 
-- Desktop GUI
-- Video file selection
-- Native drag-and-drop for supported video files
-- Media information display
-- X export with a 512 MB-oriented workflow
-- YouTube high-quality export
-- Smart Bitrate for X exports
-- FFmpeg-based video export
-- FFprobe-based media analysis
-- Export progress and result status
-- Friendly error messages
-- Recent Exports panel
-- General settings
-- Settings window
-- About dialog
+No command lines.
 
-## Supported Video Files
+No FFmpeg knowledge.
 
-- `.mp4`
-- `.mkv`
-- `.mov`
-- `.avi`
+No complicated settings.
 
-## Requirements
+Just choose your video and export.
 
-- Python
-- FFmpeg
-- FFprobe
-- NVIDIA NVENC is preferred when available
+---
 
-## Video File Policy
+# Screenshot
 
-Video files are not managed by Git.
+> *(Insert `assets/screenshots/main-window.png` here.)*
 
-Use an external storage location for source videos, generated videos, and other large media files.
+---
 
-The project default media storage location is:
+# Features
 
-```text
-D:\ExileCreatorKit
-```
+- Export for **X (512 MB optimized)**
+- Export for **YouTube (High Quality)**
+- Automatic Smart Bitrate
+- Automatic Media Information
+- Export History
+- Settings Management
+- Modern Windows GUI
+- Built-in FFmpeg support
+- MIT Licensed
+- Open Source
 
-## Documentation
+---
 
-- `docs/V1_MASTER_PLAN.md`: v1.0 scope and roadmap
-- `docs/CURRENT_SPEC.md`: current project behavior
-- `docs/ARCHITECTURE.md`: project structure
-- `docs/DEVELOPMENT_GUIDE.md`: development rules
-- `docs/RELEASE_CHECKLIST.md`: release validation checklist
-- `docs/DEV_LOG.md`: completed work log
+# Quick Start
 
-## License
+1. Download the latest release.
+2. Extract the ZIP archive.
+3. Launch **ExileCreatorKit.exe**
+4. Choose your video.
+5. Click **Export for X** or **Export for YouTube**.
 
-Exile Creator Kit is licensed under the MIT License.
+That's it.
+
+---
+
+# Designed For
+
+Exile Creator Kit is designed for players who want to share clips—not learn video encoding.
+
+Whether you're:
+
+- posting a funny moment on X,
+- uploading a boss guide to YouTube,
+- or simply saving highlights,
+
+ECK keeps the workflow simple.
+
+---
+
+# System Requirements
+
+- Windows 10 / Windows 11
+- NVIDIA GPU recommended (NVENC)
+- FFmpeg included with release builds
+
+No Python installation required.
+
+---
+
+# Project Goals
+
+Our philosophy is simple:
+
+- Make sharing gameplay effortless.
+- Keep the interface clean.
+- Build software that stays maintainable.
+- Stay fully open source.
+
+We prioritize usability over complexity.
+
+---
+
+# Roadmap
+
+## Version 1.0
+
+- Stable Windows application
+- X Export
+- YouTube Export
+- Export History
+- Settings
+- Modern GUI
+
+## Future
+
+- Better UI polish
+- Additional export presets
+- More creator workflows
+- Community-driven improvements
+
+---
+
+# Contributing
+
+Bug reports, ideas and pull requests are always welcome.
+
+Please use GitHub Issues for bug reports and feature requests.
+
+---
+
+# License
+
+This project is released under the **MIT License**.
+
+See the LICENSE file for details.
+
+---
+
+# Thank You
+
+Exile Creator Kit started with a simple idea:
+
+> **Help Path of Exile players share great moments without fighting their tools.**
+
+If ECK makes sharing your gameplay easier, then the project has achieved its goal.
+
+Thank you for using Exile Creator Kit.
