@@ -1,0 +1,21 @@
+License decision pending.
+
+Recommended license: MIT License.
+
+Reason:
+
+- Exile Creator Kit is intended to be an open-source creator utility.
+- MIT is simple and permissive.
+- MIT allows use, modification, redistribution, and commercial use with attribution.
+- MIT is compatible with many Python desktop application workflows.
+
+Important:
+
+- This file is a placeholder until the project owner confirms the final license.
+- Do not publish a public release until the final license text is selected.
+- Bundled third-party components, including FFmpeg and FFprobe, keep their own licenses.
+- The selected FFmpeg build may have LGPL or GPL obligations depending on how it was built.
+
+Recommended next step:
+
+- Replace this placeholder with the full MIT License text before the first public release.
