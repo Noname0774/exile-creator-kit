@@ -23,6 +23,7 @@ if str(ROOT_DIR) not in sys.path:
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
+from gui.settings_window import create_settings_window  # noqa: E402
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
 
@@ -271,6 +272,9 @@ def create_window() -> tk.Tk:
         separator = ttk.Separator(window, orient=tk.HORIZONTAL)
         separator.pack(fill=tk.X, padx=28, pady=14)
 
+    def open_settings_window() -> None:
+        create_settings_window()
+
     register_drop_target(window)
 
     title = tk.Label(window, text="Exile Creator Kit", font=("Segoe UI", 18, "bold"))
@@ -278,6 +282,9 @@ def create_window() -> tk.Tk:
 
     description = tk.Label(window, text="Create upload-ready videos for X and YouTube")
     description.pack()
+
+    settings_button = tk.Button(window, text="Settings", width=16, command=open_settings_window)
+    settings_button.pack(pady=(10, 0))
 
     add_separator()
 
