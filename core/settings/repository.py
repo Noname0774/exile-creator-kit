@@ -1,11 +1,14 @@
 """Settings JSON repository."""
 
 import json
+import logging
 from dataclasses import asdict
 from pathlib import Path
 
 from core.settings.defaults import default_settings
 from core.settings.model import AppSettings
+
+logger = logging.getLogger(__name__)
 
 
 class SettingsRepository:
@@ -17,8 +20,16 @@ class SettingsRepository:
         if not self._file_path.exists():
             return defaults
 
-        with self._file_path.open("r", encoding="utf-8") as settings_file:
-            data = json.load(settings_file)
+        try:
+            with self._file_path.open("r", encoding="utf-8") as settings_file:
+                data = json.load(settings_file)
+        except (OSError, json.JSONDecodeError):
+            logger.warning("Failed to load settings. Using defaults.", exc_info=True)
+            return defaults
+
+        if not isinstance(data, dict):
+            logger.warning("Settings file is not a JSON object. Using defaults.")
+            return defaults
 
         merged_data = asdict(defaults)
         merged_data.update(

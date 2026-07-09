@@ -1,10 +1,14 @@
 """Settings service."""
 
+import logging
 from dataclasses import replace
 
+from core.settings.defaults import default_settings
 from core.settings.model import AppSettings
 from core.settings.repository import SettingsRepository
 from core.settings.validator import SettingsValidator
+
+logger = logging.getLogger(__name__)
 
 
 class SettingsService:
@@ -18,7 +22,12 @@ class SettingsService:
 
     def load(self) -> AppSettings:
         settings = self._repository.load()
-        self._validator.validate(settings)
+        try:
+            self._validator.validate(settings)
+        except ValueError:
+            logger.warning("Invalid settings values. Using defaults.", exc_info=True)
+            return default_settings()
+
         return settings
 
     def save(self, settings: AppSettings) -> None:
