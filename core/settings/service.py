@@ -1,6 +1,7 @@
 """Settings service."""
 
 import logging
+import subprocess
 from dataclasses import replace
 from pathlib import Path
 
@@ -44,10 +45,28 @@ class SettingsService:
         return settings
 
     def get_ffmpeg_path(self) -> str:
-        return self._resolve_executable_path(self.load().ffmpeg_path, "ffmpeg")
+        executable_path = self._resolve_executable_path(self.load().ffmpeg_path, "ffmpeg")
+        self._require_executable(executable_path, "FFmpeg")
+        return executable_path
 
     def get_ffprobe_path(self) -> str:
-        return self._resolve_executable_path(self.load().ffprobe_path, "ffprobe")
+        executable_path = self._resolve_executable_path(
+            self.load().ffprobe_path,
+            "ffprobe",
+        )
+        self._require_executable(executable_path, "FFprobe")
+        return executable_path
+
+    def is_ffmpeg_available(self) -> bool:
+        executable_path = self._resolve_executable_path(self.load().ffmpeg_path, "ffmpeg")
+        return self._is_executable_available(executable_path)
+
+    def is_ffprobe_available(self) -> bool:
+        executable_path = self._resolve_executable_path(
+            self.load().ffprobe_path,
+            "ffprobe",
+        )
+        return self._is_executable_available(executable_path)
 
     def get_export_profile_overrides(self, target: str) -> dict[str, object]:
         settings = self.load()
@@ -92,3 +111,24 @@ class SettingsService:
             return default_name
 
         return path_text
+
+    def _require_executable(self, executable_path: str, display_name: str) -> None:
+        if self._is_executable_available(executable_path):
+            return
+
+        raise RuntimeError(
+            f"{display_name} was not found. "
+            f"Please install {display_name} or update the configured path."
+        )
+
+    def _is_executable_available(self, executable_path: str) -> bool:
+        try:
+            result = subprocess.run(
+                [executable_path, "-version"],
+                capture_output=True,
+                text=True,
+            )
+        except OSError:
+            return False
+
+        return result.returncode == 0
