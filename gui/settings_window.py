@@ -32,6 +32,7 @@ def create_settings_window(on_saved: Callable[[], None] | None = None) -> tk.Top
     remember_last_selected_folder = tk.BooleanVar(
         value=settings.remember_last_selected_folder
     )
+    encoder = tk.StringVar(value=settings.encoder)
     x_smart_bitrate = tk.BooleanVar(value=settings.x_smart_bitrate)
     x_audio_bitrate = tk.StringVar(value=settings.x_audio_bitrate)
     x_preset = tk.StringVar(value=settings.x_preset)
@@ -65,6 +66,7 @@ def create_settings_window(on_saved: Callable[[], None] | None = None) -> tk.Top
             last_selected_folder=last_selected_folder,
             remember_last_selected_folder=remember_last_selected_folder.get(),
             open_output_folder_after_export=open_output_folder_after_export.get(),
+            encoder=encoder.get(),
         )
         save_status.set("Saved.")
         if on_saved:
@@ -130,6 +132,21 @@ def create_settings_window(on_saved: Callable[[], None] | None = None) -> tk.Top
                 variable=remember_last_selected_folder,
             )
             remember_folder_checkbox.pack(anchor=tk.W)
+
+            encoder_label = tk.Label(general_frame, text="Encoder")
+            encoder_label.pack(anchor=tk.W, pady=(8, 0))
+
+            encoder_combo = ttk.Combobox(
+                general_frame,
+                textvariable=encoder,
+                values=(
+                    "Auto (Recommended)",
+                    "NVIDIA NVENC",
+                    "Software (libx264)",
+                ),
+                state="readonly",
+            )
+            encoder_combo.pack(fill=tk.X, pady=(4, 6))
 
             save_button = tk.Button(
                 general_frame,

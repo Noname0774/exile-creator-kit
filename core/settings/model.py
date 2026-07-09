@@ -10,6 +10,7 @@ class AppSettings:
     remember_last_selected_folder: bool
     open_output_folder_after_export: bool
     default_export_target: str
+    encoder: str
     ffmpeg_path: str
     ffprobe_path: str
     x_smart_bitrate: bool

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class SettingsValidator:
     VALID_EXPORT_TARGETS = {"X", "YouTube"}
+    VALID_ENCODERS = {"Auto (Recommended)", "NVIDIA NVENC", "Software (libx264)"}
     VALID_PRESETS = {"p1", "p2", "p3", "p4", "p5", "p6", "p7"}
     VALID_PIXEL_FORMATS = {"yuv420p", "nv12", "p010le"}
     BITRATE_PATTERN = re.compile(r"^[1-9][0-9]*[kKmM]?$")
@@ -25,6 +26,13 @@ class SettingsValidator:
             settings.default_export_target,
             self.VALID_EXPORT_TARGETS,
             defaults.default_export_target,
+        )
+        self._validate_choice(
+            settings,
+            "encoder",
+            settings.encoder,
+            self.VALID_ENCODERS,
+            defaults.encoder,
         )
         self._validate_bool(
             settings,

@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -32,20 +33,43 @@ from tools.export_to_x import x_output_path  # noqa: E402
 from tools.export_to_youtube import youtube_output_path  # noqa: E402
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
+ENCODER_AUTO = "Auto (Recommended)"
+ENCODER_NVENC = "NVIDIA NVENC"
+ENCODER_SOFTWARE = "Software (libx264)"
+SOFTWARE_ENCODER_PREFERRED = False
 
 
 class ExportWorker:
     """Run an export in the background without assuming a source checkout."""
 
-    def __init__(self, target: str, input_path: str, output_path: str) -> None:
+    def __init__(
+        self,
+        target: str,
+        input_path: str,
+        output_path: str,
+        encoder_setting: str,
+    ) -> None:
         self.target = target
         self.input_path = input_path
         self.output_path = output_path
+        self.encoder_setting = encoder_setting
         self.returncode: int | None = None
         self.command = ""
         self.stdout = ""
         self.stderr = ""
         self.traceback_text = ""
+        self.first_command = ""
+        self.first_returncode: int | None = None
+        self.first_stdout = ""
+        self.first_stderr = ""
+        self.fallback_command = ""
+        self.fallback_returncode: int | None = None
+        self.fallback_stdout = ""
+        self.fallback_stderr = ""
+        self.fallback_started = False
+        self.fallback_used = False
+        self.software_encoder_preferred = False
+        self.actual_encoder_used = ""
         self._thread = threading.Thread(target=self._run, daemon=True)
 
     def start(self) -> None:
@@ -60,7 +84,44 @@ class ExportWorker:
     def communicate(self) -> tuple[str, str]:
         return self.stdout, self.stderr
 
+    def _run_command(self, command: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            command,
+            capture_output=True,
+            shell=True,
+            text=True,
+        )
+
+    def _software_fallback_command(self, command: str) -> str:
+        fallback_command = re.sub(
+            r'(-c:v\s+)(?:"[^"]+"|\S+)',
+            r"\1libx264",
+            command,
+            count=1,
+        )
+        fallback_command = re.sub(
+            r'(-preset\s+)(?:"[^"]+"|\S+)',
+            r"\1medium",
+            fallback_command,
+            count=1,
+        )
+        return re.sub(
+            r'\s-cq\s+(?:"[^"]+"|\S+)',
+            "",
+            fallback_command,
+            count=1,
+        )
+
+    def _video_encoder_from_command(self, command: str) -> str:
+        match = re.search(r'-c:v\s+(?:"([^"]+)"|(\S+))', command)
+        if not match:
+            return "unknown"
+
+        return match.group(1) or match.group(2) or "unknown"
+
     def _run(self) -> None:
+        global SOFTWARE_ENCODER_PREFERRED
+
         try:
             media_info = MediaInspector().analyze(self.input_path)
             if self.target == "YouTube":
@@ -76,15 +137,47 @@ class ExportWorker:
                     bitrate,
                 )
 
-            result = subprocess.run(
-                self.command,
-                capture_output=True,
-                shell=True,
-                text=True,
+            if self.encoder_setting == ENCODER_SOFTWARE:
+                self.command = self._software_fallback_command(self.command)
+            elif self.encoder_setting == ENCODER_AUTO and SOFTWARE_ENCODER_PREFERRED:
+                self.command = self._software_fallback_command(self.command)
+                self.software_encoder_preferred = True
+
+            self.first_command = self.command
+            first_result = self._run_command(self.first_command)
+            self.first_returncode = first_result.returncode
+            self.first_stdout = first_result.stdout
+            self.first_stderr = first_result.stderr
+            self.actual_encoder_used = self._video_encoder_from_command(self.first_command)
+
+            if first_result.returncode == 0:
+                self.stdout = first_result.stdout
+                self.stderr = first_result.stderr
+                self.returncode = 0
+                return
+
+            if self.encoder_setting != ENCODER_AUTO or self.software_encoder_preferred:
+                self.stdout = first_result.stdout
+                self.stderr = first_result.stderr
+                self.returncode = first_result.returncode
+                return
+
+            self.fallback_started = True
+            self.fallback_command = self._software_fallback_command(self.first_command)
+            self.command = self.fallback_command
+            self.actual_encoder_used = self._video_encoder_from_command(
+                self.fallback_command
             )
-            self.stdout = result.stdout
-            self.stderr = result.stderr
-            self.returncode = result.returncode
+            fallback_result = self._run_command(self.fallback_command)
+            self.fallback_returncode = fallback_result.returncode
+            self.fallback_stdout = fallback_result.stdout
+            self.fallback_stderr = fallback_result.stderr
+            self.stdout = fallback_result.stdout
+            self.stderr = fallback_result.stderr
+            self.returncode = fallback_result.returncode
+            self.fallback_used = fallback_result.returncode == 0
+            if self.fallback_used:
+                SOFTWARE_ENCODER_PREFERRED = True
         except Exception as exc:
             self.stderr = str(exc)
             self.traceback_text = traceback.format_exc()
@@ -95,10 +188,11 @@ def launch_export_workflow(
     script_name: str,
     file_path: str,
     output_path: str,
+    encoder_setting: str,
 ) -> ExportWorker:
     """Launch the existing export workflow."""
     target = "YouTube" if script_name == "export_to_youtube.py" else "X"
-    worker = ExportWorker(target, file_path, output_path)
+    worker = ExportWorker(target, file_path, output_path, encoder_setting)
     worker.start()
     return worker
 
@@ -251,18 +345,31 @@ def create_window() -> tk.Tk:
                         process.traceback_text.strip() or "(not available)",
                         "",
                         f"Selected preset: {job.target}",
+                        f"Selected encoder setting: {process.encoder_setting}",
+                        f"Actual encoder used: {process.actual_encoder_used or 'unknown'}",
+                        f"Fallback used: {process.fallback_used}",
                         f"Input file: {job.input_path}",
                         f"Output file: {job.output_path}",
-                        f"FFmpeg exit code: {process.returncode}",
                         "",
-                        "Executed command:",
-                        process.command or "(command was not generated)",
+                        "First command:",
+                        process.first_command or process.command or "(command was not generated)",
+                        f"First exit code: {process.first_returncode}",
                         "",
-                        "stdout:",
-                        stdout or "(empty)",
+                        "First stdout:",
+                        process.first_stdout or stdout or "(empty)",
                         "",
-                        "stderr:",
-                        stderr or "(empty)",
+                        "First stderr:",
+                        process.first_stderr or stderr or "(empty)",
+                        "",
+                        "Fallback command:",
+                        process.fallback_command or "(fallback was not generated)",
+                        f"Fallback exit code: {process.fallback_returncode}",
+                        "",
+                        "Fallback stdout:",
+                        process.fallback_stdout or "(empty)",
+                        "",
+                        "Fallback stderr:",
+                        process.fallback_stderr or "(empty)",
                         "",
                     ]
                 ),
@@ -445,6 +552,7 @@ def create_window() -> tk.Tk:
                 script_name,
                 queued_job.input_path,
                 queued_job.output_path,
+                app_settings.encoder,
             )
         except OSError as exc:
             progress_bar.stop()
@@ -457,6 +565,10 @@ def create_window() -> tk.Tk:
 
     def watch_export(process: ExportWorker, job: ExportJob) -> None:
         if process.poll() is None:
+            if process.fallback_started:
+                export_message.set(
+                    "Hardware encoder failed. Retrying with software encoder..."
+                )
             window.after(1000, lambda: watch_export(process, job))
             return
 
@@ -469,11 +581,18 @@ def create_window() -> tk.Tk:
                 input_path=job.input_path,
                 output_path=job.output_path,
                 target=job.target,
-                status="Completed",
+                status="Completed (software fallback)"
+                if process.fallback_used
+                else "Completed",
             )
             output_folder_path.set(str(output_path.parent))
             set_open_output_button_enabled(True)
-            export_message.set(f"Saved to:\n{output_path}")
+            message = f"Saved to:\n{output_path}"
+            if process.software_encoder_preferred:
+                message += "\nSoftware encoder was preferred for this session."
+            elif process.fallback_used:
+                message += "\nSoftware encoder fallback was used."
+            export_message.set(message)
             add_recent_export(completed_job)
             if app_settings.open_output_folder_after_export:
                 open_folder(str(output_path.parent))
