@@ -28,6 +28,7 @@ from core.media.inspector import MediaInspector  # noqa: E402
 from core.media.smart_bitrate import SmartBitrate  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
 from gui.about_window import create_about_window  # noqa: E402
+from gui.components.export_card import build_export_card  # noqa: E402
 from gui.components.header import build_header  # noqa: E402
 from gui.components.media_card import build_media_card  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
@@ -699,24 +700,13 @@ def create_window() -> tk.Tk:
 
     add_separator()
 
-    button_frame = tk.Frame(window)
-    button_frame.pack()
-
-    x_button = tk.Button(
-        button_frame,
-        text="Export for X (512 MB)",
-        width=34,
-        command=lambda: export_selected("export_to_x.py"),
+    export_widgets = build_export_card(
+        window,
+        on_export_x=lambda: export_selected("export_to_x.py"),
+        on_export_youtube=lambda: export_selected("export_to_youtube.py"),
     )
-    x_button.pack(pady=(0, 8))
-
-    youtube_button = tk.Button(
-        button_frame,
-        text="Export for YouTube (High Quality)",
-        width=34,
-        command=lambda: export_selected("export_to_youtube.py"),
-    )
-    youtube_button.pack()
+    x_button = export_widgets["x_button"]
+    youtube_button = export_widgets["youtube_button"]
 
     add_separator()
 
