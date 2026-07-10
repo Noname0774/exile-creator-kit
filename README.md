@@ -1,6 +1,10 @@
 # Exile Creator Kit
 
 <p align="center">
+  <img src="assets/branding/eck-icon.png" width="160" alt="Exile Creator Kit Icon">
+</p>
+
+<p align="center">
   <img src="assets/branding/eck-banner.png" alt="Exile Creator Kit Banner">
 </p>
 
