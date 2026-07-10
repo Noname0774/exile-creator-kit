@@ -31,6 +31,7 @@ from gui.about_window import create_about_window  # noqa: E402
 from gui.components.export_card import build_export_card  # noqa: E402
 from gui.components.header import build_header  # noqa: E402
 from gui.components.media_card import build_media_card  # noqa: E402
+from gui.components.status_card import build_status_card  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
 from tools.export_to_x import x_output_path  # noqa: E402
 from tools.export_to_youtube import youtube_output_path  # noqa: E402
@@ -710,35 +711,16 @@ def create_window() -> tk.Tk:
 
     add_separator()
 
-    status_heading = tk.Label(window, text="Status", font=("Segoe UI", 11, "bold"))
-    status_heading.pack(anchor=tk.W, padx=40)
-
-    status_label = tk.Label(window, textvariable=export_status)
-    status_label.pack(pady=(8, 6))
-
-    progress_bar = ttk.Progressbar(window, mode="indeterminate", length=280)
-    progress_bar.pack()
-
-    message_label = tk.Label(window, textvariable=export_message)
-    message_label.pack(pady=(8, 0))
-
-    open_output_button = tk.Button(
+    status_widgets = build_status_card(
         window,
-        text="Open Output Folder",
-        width=22,
-        state=tk.DISABLED,
-        command=open_output_folder,
+        export_status=export_status,
+        export_message=export_message,
+        on_open_output_folder=open_output_folder,
+        on_open_log_folder=open_log_folder,
     )
-    open_output_button.pack(pady=(8, 0))
-
-    open_log_button = tk.Button(
-        window,
-        text="Open Log Folder",
-        width=22,
-        state=tk.DISABLED,
-        command=open_log_folder,
-    )
-    open_log_button.pack(pady=(8, 0))
+    progress_bar = status_widgets["progress_bar"]
+    open_output_button = status_widgets["open_output_button"]
+    open_log_button = status_widgets["open_log_button"]
 
     add_separator()
 
