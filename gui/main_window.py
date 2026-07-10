@@ -10,7 +10,6 @@ import tkinter as tk
 import traceback
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
-from PIL import Image, ImageTk
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -22,7 +21,6 @@ except ImportError:
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
-    LOGO_FILE = ROOT_DIR / "assets" / "branding" / "eck-icon.png"
 
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
 from core.export import XExporter, YouTubeExporter  # noqa: E402
@@ -30,6 +28,7 @@ from core.media.inspector import MediaInspector  # noqa: E402
 from core.media.smart_bitrate import SmartBitrate  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
 from gui.about_window import create_about_window  # noqa: E402
+from gui.components.header import build_header  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
 from tools.export_to_x import x_output_path  # noqa: E402
 from tools.export_to_youtube import youtube_output_path  # noqa: E402
@@ -680,38 +679,12 @@ def create_window() -> tk.Tk:
         create_about_window()
 
     register_drop_target(window)
-    if LOGO_FILE.exists():
-        logo_image = Image.open(LOGO_FILE)
-        logo_image = logo_image.resize((96, 96), Image.Resampling.LANCZOS)
-        logo_photo = ImageTk.PhotoImage(logo_image)
-
-        logo_label = tk.Label(window, image=logo_photo)
-        logo_label.image = logo_photo
-        logo_label.pack(pady=(10, 5))
-    title = tk.Label(window, text="Exile Creator Kit", font=("Segoe UI", 18, "bold"))
-    title.pack(pady=(8, 6))
-
-    description = tk.Label(window, text="Create upload-ready videos for X and YouTube")
-    description.pack()
-
-    app_button_frame = tk.Frame(window)
-    app_button_frame.pack(pady=(10, 0))
-
-    settings_button = tk.Button(
-        app_button_frame,
-        text="Settings",
-        width=16,
-        command=open_settings_window,
+    build_header(
+        window,
+        logo_file=ROOT_DIR / "assets" / "branding" / "eck-icon.png",
+        on_settings=open_settings_window,
+        on_about=open_about_window,
     )
-    settings_button.pack(side=tk.LEFT, padx=4)
-
-    about_button = tk.Button(
-        app_button_frame,
-        text="About",
-        width=16,
-        command=open_about_window,
-    )
-    about_button.pack(side=tk.LEFT, padx=4)
 
     add_separator()
 
