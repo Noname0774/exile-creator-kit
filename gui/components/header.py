@@ -72,7 +72,7 @@ def build_header(
             text="ECK",
             bg=BACKGROUND,
             fg=ACCENT_RED,
-            font=("Segoe UI", 24, "bold"),
+            font=("Segoe UI Semibold", 24, "normal"),
         )
         logo_label.pack(pady=(0, 6))
 

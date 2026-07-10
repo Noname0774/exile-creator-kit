@@ -41,9 +41,9 @@ def _style_button(button: tk.Button, *, accent: bool = False) -> None:
         highlightbackground=ACCENT_RED if accent else BORDER,
         highlightcolor=ACCENT_RED if accent else BORDER,
         highlightthickness=1,
-        font=(FONT_BODY[0], 11, "bold" if accent else "normal"),
+        font=(FONT_HEADING[0] if accent else FONT_BODY[0], 10, "normal"),
         cursor="hand2",
-        pady=12 if accent else 10,
+        pady=14 if accent else 11,
     )
     _attach_hover(button, accent=accent)
 
@@ -75,7 +75,7 @@ def build_export_card(
         text="Export",
         bg=CARD_BACKGROUND,
         fg=TEXT_PRIMARY,
-        font=(FONT_HEADING[0], 12, FONT_HEADING[2]),
+        font=(FONT_HEADING[0], 11, FONT_HEADING[2]),
     )
     export_heading.pack(anchor=tk.W, padx=24, pady=(22, 4))
 
@@ -91,20 +91,20 @@ def build_export_card(
     x_button = tk.Button(
         button_frame,
         text="Export for X (512 MB)",
-        width=34,
+        width=36,
         command=on_export_x,
     )
     _style_button(x_button, accent=True)
-    x_button.pack(pady=(0, 12))
+    x_button.pack(pady=(0, 14))
 
     youtube_button = tk.Button(
         button_frame,
         text="Export for YouTube (High Quality)",
-        width=34,
+        width=36,
         command=on_export_youtube,
     )
     _style_button(youtube_button)
-    youtube_button.pack(pady=(0, 22))
+    youtube_button.pack(pady=(0, 24))
 
     return {
         "x_button": x_button,
