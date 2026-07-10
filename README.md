@@ -1,7 +1,7 @@
 # Exile Creator Kit
 
 > **Download the app from the Releases page:**  
-> [ExileCreatorKit-v1.0.1.zip](https://github.com/Noname0774/exile-creator-kit/releases/latest)
+> [ExileCreatorKit-v1.1.0.zip](https://github.com/Noname0774/exile-creator-kit/releases/latest)
 >
 > Do **not** use **Code → Download ZIP** unless you want the source code.
 
