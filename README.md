@@ -1,15 +1,17 @@
 # Exile Creator Kit
 
+<p align="center">
+  <img src="assets/branding/eck-banner.png" alt="Exile Creator Kit Banner">
+</p>
+
+Create upload-ready videos for X and YouTube in just a few clicks.
+
+Exile Creator Kit (ECK) is a free and open-source Windows application designed for Path of Exile players and content creators who want to share great gameplay without learning FFmpeg or dealing with complicated export settings.
+
 > **Download the app from the Releases page:**  
 > [ExileCreatorKit-v1.1.0.zip](https://github.com/Noname0774/exile-creator-kit/releases/latest)
 >
 > Do **not** use **Code → Download ZIP** unless you want the source code.
-
-> **Share your best Path of Exile moments. Effortlessly.**
-
-Create upload-ready videos for **X** and **YouTube** in just a few clicks.
-
-Exile Creator Kit (ECK) is a free and open-source Windows application designed for **Path of Exile players and content creators** who want to share great gameplay without learning FFmpeg or dealing with complicated export settings.
 
 ---
 
