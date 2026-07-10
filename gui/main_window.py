@@ -379,6 +379,33 @@ def create_window() -> tk.Tk:
         except OSError:
             return None
 
+    def write_export_success_log(process: ExportWorker, job: ExportJob) -> Path | None:
+        try:
+            log_folder = get_log_folder()
+            log_folder.mkdir(parents=True, exist_ok=True)
+            log_path = next_export_log_path(log_folder)
+            log_path.write_text(
+                "\n".join(
+                    [
+                        "Exile Creator Kit Export Success",
+                        f"Version: {get_application_version()}",
+                        f"Timestamp: {datetime.now().isoformat(timespec='seconds')}",
+                        f"Export target: {job.target}",
+                        f"Selected encoder setting: {process.encoder_setting}",
+                        f"Actual video codec used: {process.actual_encoder_used or 'unknown'}",
+                        f"Output file: {job.output_path}",
+                        "",
+                        "FFmpeg command:",
+                        process.command or "(command was not generated)",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            return log_path
+        except OSError:
+            return None
+
     def user_friendly_error(error: object) -> str:
         raw_message = str(error).strip()
         message = raw_message.lower()
@@ -587,6 +614,7 @@ def create_window() -> tk.Tk:
             )
             output_folder_path.set(str(output_path.parent))
             set_open_output_button_enabled(True)
+            write_export_success_log(process, completed_job)
             message = f"Saved to:\n{output_path}"
             if process.software_encoder_preferred:
                 message += "\nSoftware encoder was preferred for this session."
