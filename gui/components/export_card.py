@@ -43,7 +43,7 @@ def _style_button(button: tk.Button, *, accent: bool = False) -> None:
         highlightthickness=1,
         font=(FONT_HEADING[0] if accent else FONT_BODY[0], 10, "normal"),
         cursor="hand2",
-        pady=14 if accent else 11,
+        pady=8 if accent else 7,
     )
     _attach_hover(button, accent=accent)
 
@@ -56,7 +56,7 @@ def build_export_card(
 ) -> dict[str, tk.Button]:
     """Build the export action area."""
     outer_frame = tk.Frame(parent, bg=BACKGROUND)
-    outer_frame.pack(fill=tk.X, padx=12, pady=10)
+    outer_frame.pack(fill=tk.X, padx=12, pady=4)
 
     shadow_frame = tk.Frame(outer_frame, bg="#050608")
     shadow_frame.pack(fill=tk.X, padx=(3, 0), pady=(3, 0))
@@ -77,7 +77,7 @@ def build_export_card(
         fg=TEXT_PRIMARY,
         font=(FONT_HEADING[0], 11, FONT_HEADING[2]),
     )
-    export_heading.pack(anchor=tk.W, padx=24, pady=(22, 4))
+    export_heading.pack(anchor=tk.W, padx=24, pady=(10, 2))
 
     export_description = tk.Label(
         button_frame,
@@ -86,7 +86,7 @@ def build_export_card(
         fg=TEXT_SECONDARY,
         font=FONT_SMALL,
     )
-    export_description.pack(anchor=tk.W, padx=24, pady=(0, 16))
+    export_description.pack(anchor=tk.W, padx=24, pady=(0, 7))
 
     x_button = tk.Button(
         button_frame,
@@ -95,7 +95,7 @@ def build_export_card(
         command=on_export_x,
     )
     _style_button(x_button, accent=True)
-    x_button.pack(pady=(0, 14))
+    x_button.pack(pady=(0, 7))
 
     youtube_button = tk.Button(
         button_frame,
@@ -104,7 +104,7 @@ def build_export_card(
         command=on_export_youtube,
     )
     _style_button(youtube_button)
-    youtube_button.pack(pady=(0, 24))
+    youtube_button.pack(pady=(0, 10))
 
     return {
         "x_button": x_button,

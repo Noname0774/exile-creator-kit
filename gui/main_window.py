@@ -33,6 +33,7 @@ from gui.components.header import build_header  # noqa: E402
 from gui.components.media_card import build_media_card  # noqa: E402
 from gui.components.recent_exports_card import build_recent_exports_card  # noqa: E402
 from gui.components.status_card import build_status_card  # noqa: E402
+from gui.components.theme import BACKGROUND  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
 from tools.export_to_x import x_output_path  # noqa: E402
 from tools.export_to_youtube import youtube_output_path  # noqa: E402
@@ -206,7 +207,9 @@ def create_window() -> tk.Tk:
     """Create the prototype main window."""
     window = TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     window.title("Exile Creator Kit")
-    window.geometry("460x680")
+    window.geometry("900x780")
+    window.minsize(760, 620)
+    window.configure(bg=BACKGROUND)
 
     selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
@@ -672,48 +675,79 @@ def create_window() -> tk.Tk:
             widget.drop_target_register(DND_FILES)
             widget.dnd_bind("<<Drop>>", handle_drop)
 
-    def add_separator() -> None:
-        separator = ttk.Separator(window, orient=tk.HORIZONTAL)
-        separator.pack(fill=tk.X, padx=28, pady=14)
-
     def open_settings_window() -> None:
         create_settings_window(on_saved=reload_settings)
 
     def open_about_window() -> None:
         create_about_window()
 
-    register_drop_target(window)
-    build_header(
+    canvas = tk.Canvas(
         window,
+        bg=BACKGROUND,
+        borderwidth=0,
+        highlightthickness=0,
+    )
+    scrollbar = ttk.Scrollbar(window, orient=tk.VERTICAL, command=canvas.yview)
+    canvas.configure(yscrollcommand=scrollbar.set)
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    content_frame = tk.Frame(canvas, bg=BACKGROUND)
+    content_window = canvas.create_window((0, 0), window=content_frame, anchor=tk.N)
+
+    def update_scroll_region(_event=None) -> None:
+        canvas.configure(scrollregion=canvas.bbox(tk.ALL))
+
+    def resize_content(event) -> None:
+        content_width = min(event.width, 860)
+        canvas.itemconfigure(content_window, width=content_width)
+        canvas.coords(content_window, event.width // 2, 0)
+
+    def handle_mousewheel(event) -> None:
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    content_frame.bind("<Configure>", update_scroll_region)
+    canvas.bind("<Configure>", resize_content)
+    canvas.bind_all("<MouseWheel>", handle_mousewheel)
+
+    register_drop_target(window)
+    register_drop_target(canvas)
+    register_drop_target(content_frame)
+    build_header(
+        content_frame,
         logo_file=ROOT_DIR / "assets" / "branding" / "eck-icon.png",
         on_settings=open_settings_window,
         on_about=open_about_window,
     )
 
-    add_separator()
-
     build_media_card(
-        window,
+        content_frame,
         selected_file_name=selected_file_name,
         media_info_text=media_info_text,
         on_choose_video=choose_video,
         register_drop_target=register_drop_target,
     )
 
-    add_separator()
+    center_columns = tk.Frame(content_frame, bg=BACKGROUND)
+    center_columns.pack(fill=tk.X, padx=2, pady=(6, 0))
+    center_columns.grid_columnconfigure(0, weight=1, uniform="main")
+    center_columns.grid_columnconfigure(1, weight=1, uniform="main")
+
+    export_column = tk.Frame(center_columns, bg=BACKGROUND)
+    status_column = tk.Frame(center_columns, bg=BACKGROUND)
+    export_column.grid(row=0, column=0, sticky="nsew")
+    status_column.grid(row=0, column=1, sticky="nsew")
 
     export_widgets = build_export_card(
-        window,
+        export_column,
         on_export_x=lambda: export_selected("export_to_x.py"),
         on_export_youtube=lambda: export_selected("export_to_youtube.py"),
     )
     x_button = export_widgets["x_button"]
     youtube_button = export_widgets["youtube_button"]
 
-    add_separator()
-
     status_widgets = build_status_card(
-        window,
+        status_column,
         export_status=export_status,
         export_message=export_message,
         on_open_output_folder=open_output_folder,
@@ -723,10 +757,8 @@ def create_window() -> tk.Tk:
     open_output_button = status_widgets["open_output_button"]
     open_log_button = status_widgets["open_log_button"]
 
-    add_separator()
-
     build_recent_exports_card(
-        window,
+        content_frame,
         recent_exports_text=recent_exports_text,
     )
 

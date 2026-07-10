@@ -40,7 +40,7 @@ def _style_accent_button(button: tk.Button) -> None:
         highlightthickness=0,
         font=FONT_BODY,
         cursor="hand2",
-        pady=9,
+        pady=7,
     )
     _attach_accent_hover(button)
 
@@ -76,7 +76,7 @@ def build_media_card(
         fg=TEXT_PRIMARY,
         font=FONT_HEADING,
     )
-    selected_video_heading.pack(anchor=tk.W, padx=24, pady=(12, 6))
+    selected_video_heading.pack(anchor=tk.W, padx=24, pady=(8, 4))
 
     drop_area = tk.Label(
         frame,
@@ -91,7 +91,7 @@ def build_media_card(
         width=28,
         height=1,
     )
-    drop_area.pack(fill=tk.X, padx=24, pady=(0, 8))
+    drop_area.pack(fill=tk.X, padx=24, pady=(0, 5))
     register_drop_target(drop_area)
 
     media_info_label = tk.Label(
@@ -102,7 +102,7 @@ def build_media_card(
         fg=TEXT_SECONDARY,
         font=FONT_SMALL,
     )
-    media_info_label.pack(anchor=tk.W, padx=24, pady=(0, 8))
+    media_info_label.pack(anchor=tk.W, padx=24, pady=(0, 4))
 
     choose_button = tk.Button(
         frame,
@@ -111,6 +111,6 @@ def build_media_card(
         command=on_choose_video,
     )
     _style_accent_button(choose_button)
-    choose_button.pack(pady=(0, 12))
+    choose_button.pack(pady=(0, 8))
 
     return outer_frame

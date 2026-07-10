@@ -20,7 +20,7 @@ def build_recent_exports_card(
 ) -> tk.Frame:
     """Build the recent exports area."""
     outer_frame = tk.Frame(parent, bg=BACKGROUND)
-    outer_frame.pack(fill=tk.X, padx=14, pady=8)
+    outer_frame.pack(fill=tk.X, padx=14, pady=4)
 
     shadow_frame = tk.Frame(outer_frame, bg="#050608")
     shadow_frame.pack(fill=tk.X, padx=(2, 0), pady=(2, 0))
@@ -41,7 +41,7 @@ def build_recent_exports_card(
         fg=TEXT_PRIMARY,
         font=FONT_HEADING,
     )
-    recent_exports_heading.pack(anchor=tk.W, padx=24, pady=(22, 8))
+    recent_exports_heading.pack(anchor=tk.W, padx=24, pady=(12, 6))
 
     recent_exports_label = tk.Label(
         frame,
@@ -51,6 +51,6 @@ def build_recent_exports_card(
         fg=TEXT_SECONDARY,
         font=FONT_SMALL,
     )
-    recent_exports_label.pack(anchor=tk.W, padx=24, pady=(0, 22))
+    recent_exports_label.pack(anchor=tk.W, padx=24, pady=(0, 12))
 
     return outer_frame

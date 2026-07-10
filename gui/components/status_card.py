@@ -47,7 +47,7 @@ def _style_button(button: tk.Button) -> None:
         highlightthickness=1,
         font=FONT_BODY,
         cursor="hand2",
-        pady=8,
+        pady=5,
     )
     _attach_hover(button)
 
@@ -62,7 +62,7 @@ def build_status_card(
 ) -> dict[str, tk.Widget]:
     """Build the export status area."""
     outer_frame = tk.Frame(parent, bg=BACKGROUND)
-    outer_frame.pack(fill=tk.X, padx=14, pady=8)
+    outer_frame.pack(fill=tk.X, padx=12, pady=4)
 
     shadow_frame = tk.Frame(outer_frame, bg="#050608")
     shadow_frame.pack(fill=tk.X, padx=(2, 0), pady=(2, 0))
@@ -83,7 +83,7 @@ def build_status_card(
         fg=TEXT_PRIMARY,
         font=FONT_HEADING,
     )
-    status_heading.pack(anchor=tk.W, padx=24, pady=(22, 8))
+    status_heading.pack(anchor=tk.W, padx=24, pady=(10, 4))
 
     status_label = tk.Label(
         frame,
@@ -92,7 +92,7 @@ def build_status_card(
         fg=ACCENT_RED,
         font=FONT_BODY,
     )
-    status_label.pack(anchor=tk.W, padx=24, pady=(0, 10))
+    status_label.pack(anchor=tk.W, padx=24, pady=(0, 5))
 
     style = ttk.Style(frame)
     style.configure(
@@ -120,27 +120,30 @@ def build_status_card(
         font=FONT_SMALL,
         wraplength=360,
     )
-    message_label.pack(padx=24, pady=(12, 0))
+    message_label.pack(padx=24, pady=(6, 0))
+
+    button_row = tk.Frame(frame, bg=CARD_BACKGROUND)
+    button_row.pack(pady=(6, 8))
 
     open_output_button = tk.Button(
-        frame,
+        button_row,
         text="Open Output Folder",
-        width=20,
+        width=16,
         state=tk.DISABLED,
         command=on_open_output_folder,
     )
     _style_button(open_output_button)
-    open_output_button.pack(pady=(12, 0))
+    open_output_button.pack(side=tk.LEFT, padx=(0, 6))
 
     open_log_button = tk.Button(
-        frame,
+        button_row,
         text="Open Log Folder",
-        width=20,
+        width=16,
         state=tk.DISABLED,
         command=on_open_log_folder,
     )
     _style_button(open_log_button)
-    open_log_button.pack(pady=(8, 20))
+    open_log_button.pack(side=tk.LEFT, padx=(6, 0))
 
     return {
         "progress_bar": progress_bar,
