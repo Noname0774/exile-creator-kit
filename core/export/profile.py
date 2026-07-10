@@ -4,6 +4,10 @@ from dataclasses import dataclass
 
 from core.settings.service import SettingsService
 
+ENCODER_AUTO = "Auto (Recommended)"
+ENCODER_NVENC = "NVIDIA NVENC"
+ENCODER_SOFTWARE = "Software (libx264)"
+
 
 @dataclass(frozen=True)
 class ExportProfile:
@@ -63,4 +67,20 @@ class ExportProfile:
     ) -> "ExportProfile":
         service = settings_service or SettingsService()
         values = defaults | service.get_export_profile_overrides(target)
+        cls._apply_encoder_setting(values, service)
         return cls(**values)
+
+    @staticmethod
+    def _apply_encoder_setting(
+        values: dict[str, object],
+        service: SettingsService,
+    ) -> None:
+        encoder = service.get_settings().encoder
+        if encoder == ENCODER_SOFTWARE:
+            values["video_codec"] = "libx264"
+            values["preset"] = "medium"
+            values["quality"] = ""
+            return
+
+        if encoder in {ENCODER_AUTO, ENCODER_NVENC}:
+            values["video_codec"] = "h264_nvenc"
