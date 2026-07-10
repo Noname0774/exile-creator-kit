@@ -10,6 +10,7 @@ import tkinter as tk
 import traceback
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
+from PIL import Image, ImageTk
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -21,6 +22,7 @@ except ImportError:
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
+    LOGO_FILE = ROOT_DIR / "assets" / "branding" / "eck-icon.png"
 
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
 from core.export import XExporter, YouTubeExporter  # noqa: E402
@@ -202,6 +204,7 @@ def create_window() -> tk.Tk:
     window = TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     window.title("Exile Creator Kit")
     window.geometry("460x680")
+
     selected_file_name = tk.StringVar(value="Drop video here")
     selected_file_path = tk.StringVar(value="")
     media_info_text = tk.StringVar(value="")
@@ -677,9 +680,16 @@ def create_window() -> tk.Tk:
         create_about_window()
 
     register_drop_target(window)
+    if LOGO_FILE.exists():
+        logo_image = Image.open(LOGO_FILE)
+        logo_image = logo_image.resize((96, 96), Image.Resampling.LANCZOS)
+        logo_photo = ImageTk.PhotoImage(logo_image)
 
+        logo_label = tk.Label(window, image=logo_photo)
+        logo_label.image = logo_photo
+        logo_label.pack(pady=(10, 5))
     title = tk.Label(window, text="Exile Creator Kit", font=("Segoe UI", 18, "bold"))
-    title.pack(pady=(24, 6))
+    title.pack(pady=(8, 6))
 
     description = tk.Label(window, text="Create upload-ready videos for X and YouTube")
     description.pack()
