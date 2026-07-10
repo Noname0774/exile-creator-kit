@@ -29,6 +29,7 @@ from core.media.smart_bitrate import SmartBitrate  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
 from gui.about_window import create_about_window  # noqa: E402
 from gui.components.header import build_header  # noqa: E402
+from gui.components.media_card import build_media_card  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
 from tools.export_to_x import x_output_path  # noqa: E402
 from tools.export_to_youtube import youtube_output_path  # noqa: E402
@@ -688,30 +689,13 @@ def create_window() -> tk.Tk:
 
     add_separator()
 
-    selected_video_heading = tk.Label(
+    build_media_card(
         window,
-        text="Selected Video",
-        font=("Segoe UI", 11, "bold"),
+        selected_file_name=selected_file_name,
+        media_info_text=media_info_text,
+        on_choose_video=choose_video,
+        register_drop_target=register_drop_target,
     )
-    selected_video_heading.pack(anchor=tk.W, padx=40, pady=(0, 8))
-
-    drop_area = tk.Label(
-        window,
-        textvariable=selected_file_name,
-        relief="groove",
-        width=42,
-        height=3,
-    )
-    drop_area.pack(pady=(0, 10))
-    register_drop_target(drop_area)
-
-    media_info_label = tk.Label(window, textvariable=media_info_text, justify=tk.LEFT)
-    media_info_label.pack(anchor=tk.W, padx=54, pady=(0, 4))
-
-    add_separator()
-
-    choose_button = tk.Button(window, text="Choose Video", width=22, command=choose_video)
-    choose_button.pack(pady=(0, 2))
 
     add_separator()
 
