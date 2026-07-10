@@ -23,10 +23,13 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
+from core.export import PreflightChecker  # noqa: E402
 from core.export import XExporter, YouTubeExporter  # noqa: E402
+from core.media import MediaSummary  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
 from core.media.smart_bitrate import SmartBitrate  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
+from core.system import EncoderSelector, EnvironmentDetector  # noqa: E402
 from gui.about_window import create_about_window  # noqa: E402
 from gui.components.export_card import build_export_card  # noqa: E402
 from gui.components.header import build_header  # noqa: E402
@@ -222,8 +225,22 @@ def create_window() -> tk.Tk:
     export_queue = ExportQueue()
     settings_service = SettingsService()
     app_settings = settings_service.get_settings()
+    environment_info = EnvironmentDetector().detect()
+    encoder_decision = EncoderSelector().select(environment_info)
+    current_media_summary: MediaSummary | None = None
     output_folder_path = tk.StringVar(value="")
     log_folder_path = tk.StringVar(value="")
+
+    export_status.set("Ready")
+    export_message.set(
+        "\n".join(
+            [
+                f"GPU: {environment_info.gpu_vendor} - {environment_info.gpu_name}",
+                f"Encoder: {encoder_decision.auto_label}",
+                "Environment: Ready",
+            ]
+        )
+    )
 
     def reload_settings() -> None:
         nonlocal app_settings
@@ -491,27 +508,48 @@ def create_window() -> tk.Tk:
     def open_log_folder() -> None:
         open_folder(log_folder_path.get())
 
-    def format_file_size(file_size_mb: float) -> str:
-        if file_size_mb >= 1024:
-            return f"{file_size_mb / 1024:.2f} GB"
-
-        return f"{file_size_mb:.2f} MB"
-
     def set_media_info(file_path: str) -> None:
+        nonlocal current_media_summary
         try:
-            media_info = MediaInspector().analyze(file_path)
+            current_media_summary = MediaSummary.from_file(file_path)
         except RuntimeError as exc:
+            current_media_summary = None
             media_info_text.set(user_friendly_error(exc))
             return
 
-        path = Path(file_path)
         media_info_text.set(
-            f"File: {path.name}\n"
-            f"Location: {path.parent}\n"
-            f"Duration: {media_info.duration_text}\n"
-            f"Resolution: {media_info.width} × {media_info.height}\n"
-            f"File size: {format_file_size(media_info.file_size_mb)}"
+            f"Filename: {current_media_summary.filename}\n"
+            f"Resolution: {current_media_summary.resolution}\n"
+            f"FPS: {current_media_summary.fps:.2f}\n"
+            f"Duration: {current_media_summary.duration}\n"
+            f"Codec: {current_media_summary.video_codec} / "
+            f"{current_media_summary.audio_codec}\n"
+            f"Filesize: {current_media_summary.filesize}\n"
+            f"Estimated X Size: {current_media_summary.estimated_x_export_size}\n"
+            "Estimated YouTube Size: "
+            f"{current_media_summary.estimated_youtube_export_size}"
         )
+
+    def format_preflight_result(result) -> str:
+        item_map = {item.name: item for item in result.items}
+        names = (
+            "GPU",
+            "Encoder",
+            "FFmpeg",
+            "FFprobe",
+            "Input File",
+            "Output Folder",
+            "Disk Space",
+            "Estimated Export Time",
+            "Estimated Export Size",
+        )
+        lines = [f"Preflight: {result.status}"]
+        for name in names:
+            item = item_map.get(name)
+            if item:
+                lines.append(f"{item.name}: {item.status}")
+
+        return "\n".join(lines)
 
     def set_selected_file(file_path: str) -> None:
         path = Path(file_path)
@@ -554,6 +592,16 @@ def create_window() -> tk.Tk:
 
         target = get_export_target(script_name)
         output_path = get_output_path(file_path, target)
+        media_summary = current_media_summary
+        if media_summary is not None:
+            preflight_result = PreflightChecker().check(
+                environment_info,
+                media_summary,
+                input_file=file_path,
+                output_folder=output_path.parent,
+            )
+            export_message.set(format_preflight_result(preflight_result))
+
         export_queue.add(
             ExportJob(
                 input_path=file_path,
