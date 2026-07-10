@@ -31,6 +31,7 @@ from gui.about_window import create_about_window  # noqa: E402
 from gui.components.export_card import build_export_card  # noqa: E402
 from gui.components.header import build_header  # noqa: E402
 from gui.components.media_card import build_media_card  # noqa: E402
+from gui.components.recent_exports_card import build_recent_exports_card  # noqa: E402
 from gui.components.status_card import build_status_card  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
 from tools.export_to_x import x_output_path  # noqa: E402
@@ -724,19 +725,10 @@ def create_window() -> tk.Tk:
 
     add_separator()
 
-    recent_exports_heading = tk.Label(
+    build_recent_exports_card(
         window,
-        text="Recent Exports",
-        font=("Segoe UI", 11, "bold"),
+        recent_exports_text=recent_exports_text,
     )
-    recent_exports_heading.pack(anchor=tk.W, padx=40)
-
-    recent_exports_label = tk.Label(
-        window,
-        textvariable=recent_exports_text,
-        justify=tk.LEFT,
-    )
-    recent_exports_label.pack(anchor=tk.W, padx=54, pady=(8, 0))
 
     return window
 
