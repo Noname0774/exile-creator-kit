@@ -2,6 +2,33 @@
 
 All notable changes to Exile Creator Kit will be documented in this file.
 
+## v1.1.0 - Unreleased
+
+### Added
+
+- Encoder selection settings:
+  - Auto (Recommended)
+  - NVIDIA NVENC
+  - Software (libx264)
+- Automatic software encoder fallback when hardware encoding fails.
+- Session-based software encoder preference after successful fallback.
+- Successful export diagnostics logs.
+- Export logs now record:
+  - Selected encoder setting.
+  - Actual video codec used.
+  - FFmpeg command.
+  - Output path.
+  - Export target.
+
+### Changed
+
+- Export profiles now respect the selected encoder setting.
+- Export workflow now provides better diagnostics for troubleshooting.
+
+### Improved
+
+- Users can verify which encoder was actually used after export.
+
 ## v1.0.0 - Pending
 
 First public release.
