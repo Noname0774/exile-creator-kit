@@ -21,6 +21,7 @@ This document defines the approved Premium Dark UI layout for Exile Creator Kit.
   - About button
 - Keep the approved header ratio and spacing.
 - Do not make the header oversized.
+- The ECK logo must have clear presence without changing the logo artwork.
 
 ## Selected Video
 
@@ -31,6 +32,7 @@ This document defines the approved Premium Dark UI layout for Exile Creator Kit.
   - Choose Video button
   - Media information
 - Use the approved dark wine red as the accent color.
+- The drop area uses a thin dashed dark wine red border.
 
 ## Center Columns
 
@@ -85,6 +87,8 @@ Right column:
 - Use dark wine red or dark gray.
 - Hover states must not use bright red.
 - Export should stand out through size and placement.
+- Export buttons include a left-side target icon/mark aligned with the label.
+- Folder/log action buttons include a left-side icon/mark aligned with the label.
 - Do not change processing callbacks.
 
 ## Protected Behavior

@@ -4,10 +4,12 @@ import tkinter as tk
 
 from gui.components.theme import (
     BACKGROUND,
-    BORDER,
     CARD_BACKGROUND,
+    CARD_BORDER,
+    CARD_PADDING_X,
     FONT_HEADING,
     FONT_SMALL,
+    SHADOW,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
 )
@@ -20,15 +22,15 @@ def build_recent_exports_card(
 ) -> tk.Frame:
     """Build the recent exports area."""
     outer_frame = tk.Frame(parent, bg=BACKGROUND)
-    outer_frame.pack(fill=tk.X, padx=14, pady=4)
+    outer_frame.pack(fill=tk.X, padx=14, pady=5)
 
-    shadow_frame = tk.Frame(outer_frame, bg="#050608")
+    shadow_frame = tk.Frame(outer_frame, bg=SHADOW)
     shadow_frame.pack(fill=tk.X, padx=(2, 0), pady=(2, 0))
 
     frame = tk.Frame(
         shadow_frame,
         bg=CARD_BACKGROUND,
-        highlightbackground=BORDER,
+        highlightbackground=CARD_BORDER,
         highlightthickness=1,
         borderwidth=0,
     )
@@ -41,7 +43,7 @@ def build_recent_exports_card(
         fg=TEXT_PRIMARY,
         font=FONT_HEADING,
     )
-    recent_exports_heading.pack(anchor=tk.W, padx=24, pady=(12, 6))
+    recent_exports_heading.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(12, 6))
 
     recent_exports_label = tk.Label(
         frame,
@@ -51,6 +53,6 @@ def build_recent_exports_card(
         fg=TEXT_SECONDARY,
         font=FONT_SMALL,
     )
-    recent_exports_label.pack(anchor=tk.W, padx=24, pady=(0, 12))
+    recent_exports_label.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(0, 12))
 
     return outer_frame

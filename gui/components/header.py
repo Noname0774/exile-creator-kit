@@ -56,16 +56,16 @@ def build_header(
     ttk.Style(parent).configure("TSeparator", background=BORDER)
 
     frame = tk.Frame(parent, bg=BACKGROUND)
-    frame.pack(fill=tk.X, padx=18, pady=(2, 0))
+    frame.pack(fill=tk.X, padx=18, pady=(4, 2))
 
     if logo_file.exists():
         logo_image = Image.open(logo_file)
-        logo_image = logo_image.resize((58, 58), Image.Resampling.LANCZOS)
+        logo_image = logo_image.resize((76, 76), Image.Resampling.LANCZOS)
         logo_photo = ImageTk.PhotoImage(logo_image)
 
         logo_label = tk.Label(frame, image=logo_photo, bg=BACKGROUND, borderwidth=0)
         logo_label.image = logo_photo
-        logo_label.pack(pady=(0, 2))
+        logo_label.pack(pady=(0, 3))
     else:
         logo_label = tk.Label(
             frame,
@@ -81,11 +81,11 @@ def build_header(
         text="Exile Creator Kit",
         bg=BACKGROUND,
         fg=TEXT_PRIMARY,
-        font=(FONT_TITLE[0], 17, FONT_TITLE[2]),
+        font=(FONT_TITLE[0], 19, FONT_TITLE[2]),
     )
     title.pack(pady=(0, 1))
 
-    accent_line = tk.Frame(frame, bg=ACCENT_RED, width=92, height=2)
+    accent_line = tk.Frame(frame, bg=ACCENT_RED, width=108, height=2)
     accent_line.pack(pady=(0, 3))
 
     description = tk.Label(
@@ -99,7 +99,7 @@ def build_header(
     description.pack()
 
     app_button_frame = tk.Frame(frame, bg=BACKGROUND)
-    app_button_frame.pack(pady=(6, 0))
+    app_button_frame.pack(pady=(7, 0))
 
     settings_button = tk.Button(
         app_button_frame,

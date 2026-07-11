@@ -13,9 +13,13 @@ from gui.components.theme import (
     BUTTON_BACKGROUND_HOVER,
     BUTTON_TEXT,
     CARD_BACKGROUND,
+    CARD_BORDER,
+    CARD_MIN_HEIGHT,
+    CARD_PADDING_X,
     FONT_BODY,
     FONT_HEADING,
     FONT_SMALL,
+    SHADOW,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
 )
@@ -85,19 +89,21 @@ def build_export_card(
 ) -> dict[str, tk.Widget]:
     """Build the export action area."""
     outer_frame = tk.Frame(parent, bg=BACKGROUND)
-    outer_frame.pack(fill=tk.X, padx=12, pady=4)
+    outer_frame.pack(fill=tk.BOTH, expand=True, padx=(14, 8), pady=5)
 
-    shadow_frame = tk.Frame(outer_frame, bg="#050608")
-    shadow_frame.pack(fill=tk.X, padx=(3, 0), pady=(3, 0))
+    shadow_frame = tk.Frame(outer_frame, bg=SHADOW)
+    shadow_frame.pack(fill=tk.BOTH, expand=True, padx=(2, 0), pady=(2, 0))
 
     button_frame = tk.Frame(
         shadow_frame,
         bg=CARD_BACKGROUND,
-        highlightbackground=ACCENT_RED,
+        highlightbackground=CARD_BORDER,
         highlightthickness=1,
         borderwidth=0,
+        height=CARD_MIN_HEIGHT,
     )
-    button_frame.pack(fill=tk.X, padx=(0, 3), pady=(0, 3))
+    button_frame.pack(fill=tk.BOTH, expand=True, padx=(0, 2), pady=(0, 2))
+    button_frame.pack_propagate(False)
 
     export_heading = tk.Label(
         button_frame,
@@ -106,7 +112,7 @@ def build_export_card(
         fg=TEXT_PRIMARY,
         font=(FONT_HEADING[0], 11, FONT_HEADING[2]),
     )
-    export_heading.pack(anchor=tk.W, padx=24, pady=(10, 2))
+    export_heading.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(14, 2))
 
     export_description = tk.Label(
         button_frame,
@@ -115,7 +121,25 @@ def build_export_card(
         fg=TEXT_SECONDARY,
         font=FONT_SMALL,
     )
-    export_description.pack(anchor=tk.W, padx=24, pady=(0, 7))
+    export_description.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(0, 7))
+
+    x_button = tk.Button(
+        button_frame,
+        text="X   Export for X (512 MB)",
+        width=38,
+        command=on_export_x,
+    )
+    _style_button(x_button, accent=True)
+    x_button.pack(fill=tk.X, padx=CARD_PADDING_X, pady=(0, 8))
+
+    youtube_button = tk.Button(
+        button_frame,
+        text="▶   Export for YouTube (High Quality)",
+        width=38,
+        command=on_export_youtube,
+    )
+    _style_button(youtube_button)
+    youtube_button.pack(fill=tk.X, padx=CARD_PADDING_X, pady=(0, 12))
 
     preset_label = tk.Label(
         button_frame,
@@ -124,7 +148,7 @@ def build_export_card(
         fg=TEXT_SECONDARY,
         font=FONT_SMALL,
     )
-    preset_label.pack(anchor=tk.W, padx=24, pady=(0, 4))
+    preset_label.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(0, 4))
 
     preset_selector = tk.OptionMenu(
         button_frame,
@@ -133,7 +157,7 @@ def build_export_card(
         command=on_preset_selected,
     )
     _style_option_menu(preset_selector)
-    preset_selector.pack(fill=tk.X, padx=24, pady=(0, 6))
+    preset_selector.pack(fill=tk.X, padx=CARD_PADDING_X, pady=(0, 6))
 
     current_preset_label = tk.Label(
         button_frame,
@@ -144,7 +168,7 @@ def build_export_card(
         wraplength=320,
         justify=tk.LEFT,
     )
-    current_preset_label.pack(anchor=tk.W, padx=24, pady=(0, 3))
+    current_preset_label.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(0, 3))
 
     preset_description_label = tk.Label(
         button_frame,
@@ -155,7 +179,7 @@ def build_export_card(
         wraplength=320,
         justify=tk.LEFT,
     )
-    preset_description_label.pack(anchor=tk.W, padx=24, pady=(0, 6))
+    preset_description_label.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(0, 6))
 
     encoder_label = tk.Label(
         button_frame,
@@ -166,25 +190,7 @@ def build_export_card(
         wraplength=320,
         justify=tk.LEFT,
     )
-    encoder_label.pack(anchor=tk.W, padx=24, pady=(0, 10))
-
-    x_button = tk.Button(
-        button_frame,
-        text="Export for X (512 MB)",
-        width=36,
-        command=on_export_x,
-    )
-    _style_button(x_button, accent=True)
-    x_button.pack(pady=(0, 7))
-
-    youtube_button = tk.Button(
-        button_frame,
-        text="Export for YouTube (High Quality)",
-        width=36,
-        command=on_export_youtube,
-    )
-    _style_button(youtube_button)
-    youtube_button.pack(pady=(0, 10))
+    encoder_label.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(0, 10))
 
     return {
         "preset_selector": preset_selector,

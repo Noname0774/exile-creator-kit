@@ -997,6 +997,7 @@ def create_window() -> tk.Tk:
     center_columns.pack(fill=tk.X, padx=2, pady=(6, 0))
     center_columns.grid_columnconfigure(0, weight=1, uniform="main")
     center_columns.grid_columnconfigure(1, weight=1, uniform="main")
+    center_columns.grid_rowconfigure(0, weight=1)
 
     export_column = tk.Frame(center_columns, bg=BACKGROUND)
     status_column = tk.Frame(center_columns, bg=BACKGROUND)

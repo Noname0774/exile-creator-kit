@@ -12,9 +12,13 @@ from gui.components.theme import (
     BUTTON_DISABLED_TEXT,
     BUTTON_TEXT,
     CARD_BACKGROUND,
+    CARD_BORDER,
+    CARD_MIN_HEIGHT,
+    CARD_PADDING_X,
     FONT_BODY,
     FONT_HEADING,
     FONT_SMALL,
+    SHADOW,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
 )
@@ -62,19 +66,21 @@ def build_status_card(
 ) -> dict[str, tk.Widget]:
     """Build the export status area."""
     outer_frame = tk.Frame(parent, bg=BACKGROUND)
-    outer_frame.pack(fill=tk.X, padx=12, pady=4)
+    outer_frame.pack(fill=tk.BOTH, expand=True, padx=(8, 14), pady=5)
 
-    shadow_frame = tk.Frame(outer_frame, bg="#050608")
-    shadow_frame.pack(fill=tk.X, padx=(2, 0), pady=(2, 0))
+    shadow_frame = tk.Frame(outer_frame, bg=SHADOW)
+    shadow_frame.pack(fill=tk.BOTH, expand=True, padx=(2, 0), pady=(2, 0))
 
     frame = tk.Frame(
         shadow_frame,
         bg=CARD_BACKGROUND,
-        highlightbackground=BORDER,
+        highlightbackground=CARD_BORDER,
         highlightthickness=1,
         borderwidth=0,
+        height=CARD_MIN_HEIGHT,
     )
-    frame.pack(fill=tk.X, padx=(0, 2), pady=(0, 2))
+    frame.pack(fill=tk.BOTH, expand=True, padx=(0, 2), pady=(0, 2))
+    frame.pack_propagate(False)
 
     status_heading = tk.Label(
         frame,
@@ -83,7 +89,7 @@ def build_status_card(
         fg=TEXT_PRIMARY,
         font=FONT_HEADING,
     )
-    status_heading.pack(anchor=tk.W, padx=24, pady=(10, 4))
+    status_heading.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(14, 4))
 
     status_label = tk.Label(
         frame,
@@ -92,7 +98,7 @@ def build_status_card(
         fg=ACCENT_RED,
         font=FONT_BODY,
     )
-    status_label.pack(anchor=tk.W, padx=24, pady=(0, 5))
+    status_label.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(0, 6))
 
     style = ttk.Style(frame)
     style.configure(
@@ -102,15 +108,15 @@ def build_status_card(
         bordercolor=BORDER,
         lightcolor=ACCENT_RED,
         darkcolor=ACCENT_RED,
-        thickness=8,
+        thickness=9,
     )
     progress_bar = ttk.Progressbar(
         frame,
         mode="indeterminate",
-        length=320,
+        length=300,
         style="ECK.Horizontal.TProgressbar",
     )
-    progress_bar.pack(fill=tk.X, padx=24)
+    progress_bar.pack(fill=tk.X, padx=CARD_PADDING_X)
 
     message_label = tk.Label(
         frame,
@@ -118,17 +124,18 @@ def build_status_card(
         bg=CARD_BACKGROUND,
         fg=TEXT_SECONDARY,
         font=FONT_SMALL,
-        wraplength=360,
+        justify=tk.LEFT,
+        wraplength=260,
     )
-    message_label.pack(padx=24, pady=(6, 0))
+    message_label.pack(anchor=tk.W, padx=CARD_PADDING_X, pady=(8, 0))
 
     button_row = tk.Frame(frame, bg=CARD_BACKGROUND)
-    button_row.pack(pady=(6, 8))
+    button_row.pack(side=tk.BOTTOM, pady=(8, 14))
 
     open_output_button = tk.Button(
         button_row,
-        text="Open Output Folder",
-        width=16,
+        text="□  Open Output Folder",
+        width=19,
         state=tk.DISABLED,
         command=on_open_output_folder,
     )
@@ -137,8 +144,8 @@ def build_status_card(
 
     open_log_button = tk.Button(
         button_row,
-        text="Open Log Folder",
-        width=16,
+        text="▤  Open Log Folder",
+        width=19,
         state=tk.DISABLED,
         command=on_open_log_folder,
     )
