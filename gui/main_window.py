@@ -37,7 +37,23 @@ from gui.components.header import build_header  # noqa: E402
 from gui.components.media_card import build_media_card  # noqa: E402
 from gui.components.recent_exports_card import build_recent_exports_card  # noqa: E402
 from gui.components.status_card import build_status_card  # noqa: E402
-from gui.components.theme import BACKGROUND  # noqa: E402
+from gui.components.theme import (  # noqa: E402
+    ACCENT_RED,
+    BACKGROUND,
+    BORDER,
+    BUTTON_ACCENT_BACKGROUND,
+    BUTTON_ACCENT_BACKGROUND_HOVER,
+    BUTTON_ACCENT_TEXT,
+    BUTTON_BACKGROUND,
+    BUTTON_BACKGROUND_HOVER,
+    BUTTON_TEXT,
+    CARD_BACKGROUND,
+    FONT_BODY,
+    FONT_HEADING,
+    FONT_SMALL,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+)
 from gui.settings_window import create_settings_window  # noqa: E402
 from tools.export_to_x import resolve_output_path, x_output_path  # noqa: E402
 from tools.export_to_youtube import youtube_output_path  # noqa: E402
@@ -622,6 +638,112 @@ def create_window() -> tk.Tk:
 
         return "\n".join(lines)
 
+    def format_preflight_messages(result, status: str) -> str:
+        messages = [
+            f"{item.name}: {item.message}"
+            for item in result.items
+            if item.status == status
+        ]
+        return "\n".join(messages)
+
+    def style_dialog_button(button: tk.Button, *, accent: bool = False) -> None:
+        normal = BUTTON_ACCENT_BACKGROUND if accent else BUTTON_BACKGROUND
+        hover = BUTTON_ACCENT_BACKGROUND_HOVER if accent else BUTTON_BACKGROUND_HOVER
+        text = BUTTON_ACCENT_TEXT if accent else BUTTON_TEXT
+        button.configure(
+            bg=normal,
+            fg=text,
+            activebackground=hover,
+            activeforeground=text,
+            relief=tk.FLAT,
+            borderwidth=1,
+            highlightbackground=ACCENT_RED if accent else BORDER,
+            highlightcolor=ACCENT_RED if accent else BORDER,
+            highlightthickness=1,
+            font=FONT_BODY,
+            cursor="hand2",
+            padx=18,
+            pady=7,
+        )
+        button.bind("<Enter>", lambda _event: button.configure(bg=hover))
+        button.bind("<Leave>", lambda _event: button.configure(bg=normal))
+
+    def confirm_preflight_warning(result) -> bool:
+        dialog = tk.Toplevel(window)
+        dialog.title("Preflight Warning")
+        dialog.configure(bg=BACKGROUND)
+        dialog.resizable(False, False)
+        dialog.transient(window)
+        dialog.grab_set()
+
+        answer = tk.BooleanVar(value=False)
+
+        frame = tk.Frame(
+            dialog,
+            bg=CARD_BACKGROUND,
+            highlightbackground=ACCENT_RED,
+            highlightthickness=1,
+        )
+        frame.pack(fill=tk.BOTH, expand=True, padx=18, pady=18)
+
+        title = tk.Label(
+            frame,
+            text="Preflight Warning",
+            bg=CARD_BACKGROUND,
+            fg=TEXT_PRIMARY,
+            font=FONT_HEADING,
+        )
+        title.pack(anchor=tk.W, padx=18, pady=(16, 4))
+
+        message = tk.Label(
+            frame,
+            text=(
+                "Export can continue, but one or more checks need attention.\n\n"
+                f"{format_preflight_messages(result, 'Warning')}"
+            ),
+            bg=CARD_BACKGROUND,
+            fg=TEXT_SECONDARY,
+            font=FONT_SMALL,
+            justify=tk.LEFT,
+            wraplength=420,
+        )
+        message.pack(anchor=tk.W, padx=18, pady=(0, 14))
+
+        buttons = tk.Frame(frame, bg=CARD_BACKGROUND)
+        buttons.pack(anchor=tk.E, padx=18, pady=(0, 16))
+
+        def choose_continue() -> None:
+            answer.set(True)
+            dialog.destroy()
+
+        def choose_cancel() -> None:
+            answer.set(False)
+            dialog.destroy()
+
+        continue_button = tk.Button(
+            buttons,
+            text="Continue",
+            command=choose_continue,
+        )
+        style_dialog_button(continue_button, accent=True)
+        continue_button.pack(side=tk.LEFT, padx=(0, 8))
+
+        cancel_button = tk.Button(
+            buttons,
+            text="Cancel",
+            command=choose_cancel,
+        )
+        style_dialog_button(cancel_button)
+        cancel_button.pack(side=tk.LEFT)
+
+        dialog.protocol("WM_DELETE_WINDOW", choose_cancel)
+        dialog.update_idletasks()
+        x = window.winfo_rootx() + (window.winfo_width() - dialog.winfo_width()) // 2
+        y = window.winfo_rooty() + (window.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{max(0, x)}+{max(0, y)}")
+        window.wait_window(dialog)
+        return answer.get()
+
     def set_selected_file(file_path: str) -> None:
         path = Path(file_path)
         if path.suffix.lower() not in SUPPORTED_VIDEO_EXTENSIONS:
@@ -652,27 +774,47 @@ def create_window() -> tk.Tk:
             set_failed_status("FFmpeg was not found.")
             return
 
+        button_target = get_export_target(script_name)
+        target = get_effective_export_target(button_target)
+        output_path = get_preset_output_path(file_path, button_target)
+        media_summary = current_media_summary
+        if media_summary is None:
+            export_status.set("Failed")
+            export_message.set(
+                "Preflight: Error\nMedia information is not available."
+            )
+            return
+
+        preflight_result = PreflightChecker().check(
+            environment_info,
+            media_summary,
+            input_file=file_path,
+            output_folder=output_path.parent,
+        )
+        preflight_text = format_preflight_result(preflight_result)
+        export_message.set(preflight_text)
+
+        if preflight_result.status == "Error":
+            export_status.set("Failed")
+            error_messages = format_preflight_messages(preflight_result, "Error")
+            export_message.set(
+                f"{preflight_text}\n\nExport blocked.\n{error_messages}"
+            )
+            return
+
+        if preflight_result.status == "Warning":
+            if not confirm_preflight_warning(preflight_result):
+                export_status.set("Ready")
+                export_message.set(f"{preflight_text}\n\nExport canceled.")
+                return
+
         export_status.set("Preparing...")
-        export_message.set("")
         output_folder_path.set("")
         log_folder_path.set("")
         set_export_buttons_enabled(False)
         set_open_output_button_enabled(False)
         set_open_log_button_enabled(False)
         progress_bar.start(10)
-
-        button_target = get_export_target(script_name)
-        target = get_effective_export_target(button_target)
-        output_path = get_preset_output_path(file_path, button_target)
-        media_summary = current_media_summary
-        if media_summary is not None:
-            preflight_result = PreflightChecker().check(
-                environment_info,
-                media_summary,
-                input_file=file_path,
-                output_folder=output_path.parent,
-            )
-            export_message.set(format_preflight_result(preflight_result))
 
         export_queue.add(
             ExportJob(
