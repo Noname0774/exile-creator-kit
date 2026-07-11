@@ -1,4 +1,4 @@
-"""Settings window prototype."""
+"""Settings window for Exile Creator Kit."""
 
 import sys
 import tkinter as tk
@@ -11,39 +11,199 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+from core.export.presets import PresetRepository  # noqa: E402
 from core.settings import SettingsService  # noqa: E402
+from core.system import EncoderSelector, EnvironmentDetector  # noqa: E402
+from gui.components.theme import (  # noqa: E402
+    ACCENT_RED,
+    BACKGROUND,
+    BORDER,
+    BUTTON_ACCENT_BACKGROUND,
+    BUTTON_ACCENT_BACKGROUND_HOVER,
+    BUTTON_ACCENT_TEXT,
+    BUTTON_BACKGROUND,
+    BUTTON_BACKGROUND_HOVER,
+    BUTTON_TEXT,
+    CARD_BACKGROUND,
+    FONT_BODY,
+    FONT_HEADING,
+    FONT_SMALL,
+    FONT_TITLE,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+)
 
 
-SETTINGS_SECTIONS = ("General", "X Export", "YouTube Export", "FFmpeg", "GUI")
+ENCODER_OPTIONS = (
+    "Auto (Recommended)",
+    "NVIDIA NVENC",
+    "Software (libx264)",
+)
+
+
+def _style_button(button: tk.Button, *, accent: bool = False) -> None:
+    normal = BUTTON_ACCENT_BACKGROUND if accent else BUTTON_BACKGROUND
+    hover = BUTTON_ACCENT_BACKGROUND_HOVER if accent else BUTTON_BACKGROUND_HOVER
+    text = BUTTON_ACCENT_TEXT if accent else BUTTON_TEXT
+    button.configure(
+        bg=normal,
+        fg=text,
+        activebackground=hover,
+        activeforeground=text,
+        relief=tk.FLAT,
+        borderwidth=1,
+        highlightbackground=ACCENT_RED if accent else BORDER,
+        highlightcolor=ACCENT_RED if accent else BORDER,
+        highlightthickness=1,
+        font=FONT_BODY,
+        cursor="hand2",
+        padx=12,
+        pady=7,
+    )
+    button.bind("<Enter>", lambda _event: button.configure(bg=hover))
+    button.bind("<Leave>", lambda _event: button.configure(bg=normal))
+
+
+def _style_entry(entry: tk.Entry) -> None:
+    entry.configure(
+        bg=BUTTON_BACKGROUND,
+        fg=TEXT_PRIMARY,
+        insertbackground=TEXT_PRIMARY,
+        relief=tk.FLAT,
+        borderwidth=1,
+        highlightbackground=BORDER,
+        highlightcolor=ACCENT_RED,
+        highlightthickness=1,
+        font=FONT_BODY,
+    )
+
+
+def _style_checkbutton(checkbutton: tk.Checkbutton) -> None:
+    checkbutton.configure(
+        bg=CARD_BACKGROUND,
+        fg=TEXT_SECONDARY,
+        activebackground=CARD_BACKGROUND,
+        activeforeground=TEXT_PRIMARY,
+        selectcolor=BUTTON_BACKGROUND,
+        font=FONT_BODY,
+    )
+
+
+def _style_option_menu(option_menu: tk.OptionMenu) -> None:
+    option_menu.configure(
+        bg=BUTTON_BACKGROUND,
+        fg=BUTTON_TEXT,
+        activebackground=BUTTON_BACKGROUND_HOVER,
+        activeforeground=BUTTON_TEXT,
+        relief=tk.FLAT,
+        borderwidth=1,
+        highlightbackground=BORDER,
+        highlightcolor=ACCENT_RED,
+        highlightthickness=1,
+        font=FONT_BODY,
+        cursor="hand2",
+    )
+    option_menu["menu"].configure(
+        bg=CARD_BACKGROUND,
+        fg=TEXT_PRIMARY,
+        activebackground=BUTTON_BACKGROUND_HOVER,
+        activeforeground=BUTTON_TEXT,
+        relief=tk.FLAT,
+        font=FONT_BODY,
+    )
+
+
+def _card(parent: tk.Widget, title: str, description: str) -> tk.Frame:
+    frame = tk.Frame(
+        parent,
+        bg=CARD_BACKGROUND,
+        highlightbackground=BORDER,
+        highlightthickness=1,
+        borderwidth=0,
+    )
+    frame.pack(fill=tk.X, padx=24, pady=(0, 14))
+
+    title_label = tk.Label(
+        frame,
+        text=title,
+        bg=CARD_BACKGROUND,
+        fg=TEXT_PRIMARY,
+        font=FONT_HEADING,
+    )
+    title_label.pack(anchor=tk.W, padx=22, pady=(16, 2))
+
+    description_label = tk.Label(
+        frame,
+        text=description,
+        bg=CARD_BACKGROUND,
+        fg=TEXT_SECONDARY,
+        font=FONT_SMALL,
+        wraplength=560,
+        justify=tk.LEFT,
+    )
+    description_label.pack(anchor=tk.W, padx=22, pady=(0, 12))
+    return frame
+
+
+def _field_label(parent: tk.Widget, text: str) -> None:
+    label = tk.Label(parent, text=text, bg=CARD_BACKGROUND, fg=TEXT_SECONDARY, font=FONT_SMALL)
+    label.pack(anchor=tk.W, padx=22, pady=(0, 4))
+
+
+def _option_menu(
+    parent: tk.Widget,
+    variable: tk.StringVar,
+    values: tuple[str, ...],
+) -> tk.OptionMenu:
+    option_menu = tk.OptionMenu(parent, variable, *values)
+    _style_option_menu(option_menu)
+    option_menu.pack(fill=tk.X, padx=22, pady=(0, 10))
+    return option_menu
+
+
+def _short_tool_version(version_text: str) -> str:
+    if not version_text or version_text == "Unknown":
+        return "Unknown"
+
+    version = version_text.split(" Copyright", 1)[0].strip()
+    if len(version) <= 58:
+        return version
+
+    return f"{version[:55]}..."
 
 
 def create_settings_window(on_saved: Callable[[], None] | None = None) -> tk.Toplevel:
-    """Create the settings prototype window."""
+    """Create the settings window."""
     window = tk.Toplevel()
     window.title("Settings")
-    window.geometry("460x720")
+    window.geometry("560x760")
+    window.minsize(500, 620)
+    window.configure(bg=BACKGROUND)
+
+    style = ttk.Style(window)
+    style.configure("Vertical.TScrollbar", background=BUTTON_BACKGROUND)
 
     settings_service = SettingsService()
     settings = settings_service.get_settings()
+    preset_repository = PresetRepository()
+    preset_names = preset_repository.list_names()
+    environment_info = EnvironmentDetector(settings_service=settings_service).detect()
+    encoder_decision = EncoderSelector().select(environment_info)
+
     default_output_folder = tk.StringVar(value=settings.default_output_folder)
+    default_export_preset = tk.StringVar(
+        value=settings.default_export_preset
+        if settings.default_export_preset in preset_names
+        else preset_names[0]
+    )
+    encoder = tk.StringVar(value=settings.encoder)
     open_output_folder_after_export = tk.BooleanVar(
         value=settings.open_output_folder_after_export
     )
     remember_last_selected_folder = tk.BooleanVar(
         value=settings.remember_last_selected_folder
     )
-    encoder = tk.StringVar(value=settings.encoder)
-    x_smart_bitrate = tk.BooleanVar(value=settings.x_smart_bitrate)
-    x_audio_bitrate = tk.StringVar(value=settings.x_audio_bitrate)
-    x_preset = tk.StringVar(value=settings.x_preset)
-    x_pixel_format = tk.StringVar(value=settings.x_pixel_format)
-    youtube_quality = tk.StringVar(value=settings.youtube_quality)
-    youtube_audio_bitrate = tk.StringVar(value=settings.youtube_audio_bitrate)
-    youtube_pixel_format = tk.StringVar(value=settings.youtube_pixel_format)
-    youtube_faststart = tk.BooleanVar(value=settings.youtube_faststart)
     save_status = tk.StringVar(value="")
-    x_save_status = tk.StringVar(value="")
-    youtube_save_status = tk.StringVar(value="")
 
     def choose_output_folder() -> None:
         folder_path = filedialog.askdirectory(
@@ -54,205 +214,151 @@ def create_settings_window(on_saved: Callable[[], None] | None = None) -> tk.Top
             default_output_folder.set(folder_path)
             remember_last_selected_folder.set(True)
 
-    def save_general_settings() -> None:
-        output_folder = default_output_folder.get().strip()
+    def save_settings() -> None:
         if not remember_last_selected_folder.get():
             last_selected_folder = ""
         else:
-            last_selected_folder = settings.last_selected_folder
+            last_selected_folder = settings_service.get_settings().last_selected_folder
 
         settings_service.update_settings(
-            default_output_folder=output_folder,
+            default_output_folder=default_output_folder.get().strip(),
+            default_export_preset=default_export_preset.get(),
+            encoder=encoder.get(),
             last_selected_folder=last_selected_folder,
             remember_last_selected_folder=remember_last_selected_folder.get(),
             open_output_folder_after_export=open_output_folder_after_export.get(),
-            encoder=encoder.get(),
         )
         save_status.set("Saved.")
         if on_saved:
             on_saved()
 
-    def save_x_settings() -> None:
-        settings_service.update_settings(
-            x_smart_bitrate=x_smart_bitrate.get(),
-            x_audio_bitrate=x_audio_bitrate.get().strip(),
-            x_preset=x_preset.get().strip(),
-            x_pixel_format=x_pixel_format.get().strip(),
-        )
-        x_save_status.set("Saved.")
-        if on_saved:
-            on_saved()
+    canvas = tk.Canvas(window, bg=BACKGROUND, borderwidth=0, highlightthickness=0)
+    scrollbar = ttk.Scrollbar(window, orient=tk.VERTICAL, command=canvas.yview)
+    canvas.configure(yscrollcommand=scrollbar.set)
+    canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-    def save_youtube_settings() -> None:
-        settings_service.update_settings(
-            youtube_quality=youtube_quality.get().strip(),
-            youtube_audio_bitrate=youtube_audio_bitrate.get().strip(),
-            youtube_pixel_format=youtube_pixel_format.get().strip(),
-            youtube_faststart=youtube_faststart.get(),
-        )
-        youtube_save_status.set("Saved.")
-        if on_saved:
-            on_saved()
+    content_frame = tk.Frame(canvas, bg=BACKGROUND)
+    content_window = canvas.create_window((0, 0), window=content_frame, anchor=tk.N)
 
-    title = tk.Label(window, text="Settings", font=("Segoe UI", 16, "bold"))
-    title.pack(pady=(20, 12))
+    def update_scroll_region(_event=None) -> None:
+        canvas.configure(scrollregion=canvas.bbox(tk.ALL))
 
-    for section_name in SETTINGS_SECTIONS:
-        section_label = tk.Label(window, text=section_name, font=("Segoe UI", 11, "bold"))
-        section_label.pack(anchor=tk.W, padx=36, pady=(8, 4))
+    def resize_content(event) -> None:
+        content_width = min(event.width, 520)
+        canvas.itemconfigure(content_window, width=content_width)
+        canvas.coords(content_window, event.width // 2, 0)
 
-        if section_name == "General":
-            general_frame = tk.Frame(window)
-            general_frame.pack(fill=tk.X, padx=36, pady=(0, 8))
+    content_frame.bind("<Configure>", update_scroll_region)
+    canvas.bind("<Configure>", resize_content)
 
-            output_label = tk.Label(general_frame, text="Default output folder")
-            output_label.pack(anchor=tk.W)
+    title = tk.Label(
+        content_frame,
+        text="Settings",
+        bg=BACKGROUND,
+        fg=TEXT_PRIMARY,
+        font=FONT_TITLE,
+    )
+    title.pack(pady=(24, 4))
 
-            output_entry = tk.Entry(general_frame, textvariable=default_output_folder)
-            output_entry.pack(fill=tk.X, pady=(4, 6))
+    subtitle = tk.Label(
+        content_frame,
+        text="Configure the creator workflow and environment defaults.",
+        bg=BACKGROUND,
+        fg=TEXT_SECONDARY,
+        font=FONT_BODY,
+    )
+    subtitle.pack(pady=(0, 18))
 
-            browse_button = tk.Button(
-                general_frame,
-                text="Browse",
-                width=12,
-                command=choose_output_folder,
-            )
-            browse_button.pack(anchor=tk.W, pady=(0, 8))
+    environment_card = _card(
+        content_frame,
+        "Environment",
+        "Detected system information used by Exile Creator Kit.",
+    )
+    environment_lines = (
+        f"GPU: {environment_info.gpu_vendor} - {environment_info.gpu_name}",
+        f"Encoder: {encoder_decision.auto_label}",
+        f"FFmpeg: {_short_tool_version(environment_info.ffmpeg_version)}",
+        f"Version: {environment_info.app_version}",
+    )
+    environment_label = tk.Label(
+        environment_card,
+        text="\n".join(environment_lines),
+        bg=CARD_BACKGROUND,
+        fg=TEXT_PRIMARY,
+        font=FONT_BODY,
+        justify=tk.LEFT,
+        wraplength=470,
+    )
+    environment_label.pack(anchor=tk.W, padx=22, pady=(0, 16))
 
-            open_folder_checkbox = tk.Checkbutton(
-                general_frame,
-                text="Open output folder after export",
-                variable=open_output_folder_after_export,
-            )
-            open_folder_checkbox.pack(anchor=tk.W)
+    preset_card = _card(
+        content_frame,
+        "Export Defaults",
+        "Choose the preset and encoder behavior used as application defaults.",
+    )
+    _field_label(preset_card, "Default Export Preset")
+    _option_menu(preset_card, default_export_preset, preset_names)
 
-            remember_folder_checkbox = tk.Checkbutton(
-                general_frame,
-                text="Remember last selected folder",
-                variable=remember_last_selected_folder,
-            )
-            remember_folder_checkbox.pack(anchor=tk.W)
+    _field_label(preset_card, "Default Encoder")
+    _option_menu(preset_card, encoder, ENCODER_OPTIONS)
 
-            encoder_label = tk.Label(general_frame, text="Encoder")
-            encoder_label.pack(anchor=tk.W, pady=(8, 0))
+    encoder_help = tk.Label(
+        preset_card,
+        text=(
+            "Auto uses the detected encoder first. Manual choices force the selected "
+            "encoder behavior."
+        ),
+        bg=CARD_BACKGROUND,
+        fg=TEXT_SECONDARY,
+        font=FONT_SMALL,
+        wraplength=470,
+        justify=tk.LEFT,
+    )
+    encoder_help.pack(anchor=tk.W, padx=22, pady=(0, 16))
 
-            encoder_combo = ttk.Combobox(
-                general_frame,
-                textvariable=encoder,
-                values=(
-                    "Auto (Recommended)",
-                    "NVIDIA NVENC",
-                    "Software (libx264)",
-                ),
-                state="readonly",
-            )
-            encoder_combo.pack(fill=tk.X, pady=(4, 6))
+    output_card = _card(
+        content_frame,
+        "Output Folder",
+        "Control where exports are saved and how folders behave after export.",
+    )
+    _field_label(output_card, "Default Output Folder")
+    output_entry = tk.Entry(output_card, textvariable=default_output_folder)
+    _style_entry(output_entry)
+    output_entry.pack(fill=tk.X, padx=22, pady=(0, 8), ipady=5)
 
-            save_button = tk.Button(
-                general_frame,
-                text="Save General Settings",
-                command=save_general_settings,
-            )
-            save_button.pack(anchor=tk.W, pady=(8, 0))
+    browse_button = tk.Button(output_card, text="Browse", width=14, command=choose_output_folder)
+    _style_button(browse_button)
+    browse_button.pack(anchor=tk.W, padx=22, pady=(0, 12))
 
-            save_status_label = tk.Label(general_frame, textvariable=save_status)
-            save_status_label.pack(anchor=tk.W, pady=(4, 0))
+    open_folder_checkbox = tk.Checkbutton(
+        output_card,
+        text="Open output folder after export",
+        variable=open_output_folder_after_export,
+    )
+    _style_checkbutton(open_folder_checkbox)
+    open_folder_checkbox.pack(anchor=tk.W, padx=18, pady=(0, 4))
 
-        if section_name == "X Export":
-            x_frame = tk.Frame(window)
-            x_frame.pack(fill=tk.X, padx=36, pady=(0, 8))
+    remember_folder_checkbox = tk.Checkbutton(
+        output_card,
+        text="Remember last selected folder",
+        variable=remember_last_selected_folder,
+    )
+    _style_checkbutton(remember_folder_checkbox)
+    remember_folder_checkbox.pack(anchor=tk.W, padx=18, pady=(0, 16))
 
-            smart_bitrate_checkbox = tk.Checkbutton(
-                x_frame,
-                text="Smart Bitrate",
-                variable=x_smart_bitrate,
-            )
-            smart_bitrate_checkbox.pack(anchor=tk.W)
+    save_button = tk.Button(content_frame, text="Save Settings", command=save_settings)
+    _style_button(save_button, accent=True)
+    save_button.pack(pady=(2, 8))
 
-            x_audio_label = tk.Label(x_frame, text="Audio Bitrate")
-            x_audio_label.pack(anchor=tk.W, pady=(8, 0))
-
-            x_audio_entry = tk.Entry(x_frame, textvariable=x_audio_bitrate)
-            x_audio_entry.pack(fill=tk.X, pady=(4, 6))
-
-            x_preset_label = tk.Label(x_frame, text="Preset")
-            x_preset_label.pack(anchor=tk.W)
-
-            x_preset_entry = tk.Entry(x_frame, textvariable=x_preset)
-            x_preset_entry.pack(fill=tk.X, pady=(4, 6))
-
-            x_pixel_format_label = tk.Label(x_frame, text="Pixel Format")
-            x_pixel_format_label.pack(anchor=tk.W)
-
-            x_pixel_format_entry = tk.Entry(x_frame, textvariable=x_pixel_format)
-            x_pixel_format_entry.pack(fill=tk.X, pady=(4, 6))
-
-            x_save_button = tk.Button(
-                x_frame,
-                text="Save X Export Settings",
-                command=save_x_settings,
-            )
-            x_save_button.pack(anchor=tk.W, pady=(4, 0))
-
-            x_save_status_label = tk.Label(x_frame, textvariable=x_save_status)
-            x_save_status_label.pack(anchor=tk.W, pady=(4, 0))
-
-        if section_name == "YouTube Export":
-            youtube_frame = tk.Frame(window)
-            youtube_frame.pack(fill=tk.X, padx=36, pady=(0, 8))
-
-            youtube_quality_label = tk.Label(youtube_frame, text="Quality")
-            youtube_quality_label.pack(anchor=tk.W)
-
-            youtube_quality_entry = tk.Entry(
-                youtube_frame,
-                textvariable=youtube_quality,
-            )
-            youtube_quality_entry.pack(fill=tk.X, pady=(4, 6))
-
-            youtube_audio_label = tk.Label(youtube_frame, text="Audio Bitrate")
-            youtube_audio_label.pack(anchor=tk.W)
-
-            youtube_audio_entry = tk.Entry(
-                youtube_frame,
-                textvariable=youtube_audio_bitrate,
-            )
-            youtube_audio_entry.pack(fill=tk.X, pady=(4, 6))
-
-            youtube_pixel_format_label = tk.Label(
-                youtube_frame,
-                text="Pixel Format",
-            )
-            youtube_pixel_format_label.pack(anchor=tk.W)
-
-            youtube_pixel_format_entry = tk.Entry(
-                youtube_frame,
-                textvariable=youtube_pixel_format,
-            )
-            youtube_pixel_format_entry.pack(fill=tk.X, pady=(4, 6))
-
-            youtube_faststart_checkbox = tk.Checkbutton(
-                youtube_frame,
-                text="Faststart",
-                variable=youtube_faststart,
-            )
-            youtube_faststart_checkbox.pack(anchor=tk.W)
-
-            youtube_save_button = tk.Button(
-                youtube_frame,
-                text="Save YouTube Export Settings",
-                command=save_youtube_settings,
-            )
-            youtube_save_button.pack(anchor=tk.W, pady=(8, 0))
-
-            youtube_save_status_label = tk.Label(
-                youtube_frame,
-                textvariable=youtube_save_status,
-            )
-            youtube_save_status_label.pack(anchor=tk.W, pady=(4, 0))
-
-        separator = ttk.Separator(window, orient=tk.HORIZONTAL)
-        separator.pack(fill=tk.X, padx=36)
+    save_status_label = tk.Label(
+        content_frame,
+        textvariable=save_status,
+        bg=BACKGROUND,
+        fg=TEXT_SECONDARY,
+        font=FONT_BODY,
+    )
+    save_status_label.pack(pady=(0, 24))
 
     return window
 
