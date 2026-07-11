@@ -1,6 +1,9 @@
-"""Export action UI component for Exile Creator Kit."""
+﻿"""Export action UI component for Exile Creator Kit."""
 
 import tkinter as tk
+from pathlib import Path
+
+from PIL import Image, ImageTk
 
 from gui.components.theme import (
     ACCENT_RED,
@@ -23,6 +26,9 @@ from gui.components.theme import (
     TEXT_PRIMARY,
     TEXT_SECONDARY,
 )
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+ICON_SIZE = (26, 26)
 
 
 def _attach_hover(button: tk.Button, *, accent: bool = False) -> None:
@@ -50,6 +56,32 @@ def _style_button(button: tk.Button, *, accent: bool = False) -> None:
         pady=8 if accent else 7,
     )
     _attach_hover(button, accent=accent)
+
+
+def _load_icon(file_name: str) -> ImageTk.PhotoImage | None:
+    icon_path = ROOT_DIR / "assets" / "icons" / file_name
+    if not icon_path.exists():
+        return None
+
+    try:
+        icon = Image.open(icon_path).convert("RGBA")
+        icon.thumbnail(ICON_SIZE, Image.Resampling.LANCZOS)
+        canvas = Image.new("RGBA", ICON_SIZE, (0, 0, 0, 0))
+        x = (ICON_SIZE[0] - icon.width) // 2
+        y = (ICON_SIZE[1] - icon.height) // 2
+        canvas.alpha_composite(icon, (x, y))
+        return ImageTk.PhotoImage(canvas)
+    except OSError:
+        return None
+
+
+def _apply_button_icon(button: tk.Button, file_name: str) -> None:
+    icon = _load_icon(file_name)
+    if icon is None:
+        return
+
+    button.configure(image=icon, compound=tk.LEFT, padx=14)
+    button.image = icon
 
 
 def _style_option_menu(option_menu: tk.OptionMenu) -> None:
@@ -125,20 +157,22 @@ def build_export_card(
 
     x_button = tk.Button(
         button_frame,
-        text="X   Export for X (512 MB)",
+        text="Export for X (512 MB)",
         width=38,
         command=on_export_x,
     )
     _style_button(x_button, accent=True)
+    _apply_button_icon(x_button, "x-logo.png")
     x_button.pack(fill=tk.X, padx=CARD_PADDING_X, pady=(0, 8))
 
     youtube_button = tk.Button(
         button_frame,
-        text="▶   Export for YouTube (High Quality)",
+        text="Export for YouTube (High Quality)",
         width=38,
         command=on_export_youtube,
     )
     _style_button(youtube_button)
+    _apply_button_icon(youtube_button, "youtube-logo.png")
     youtube_button.pack(fill=tk.X, padx=CARD_PADDING_X, pady=(0, 12))
 
     preset_label = tk.Label(
