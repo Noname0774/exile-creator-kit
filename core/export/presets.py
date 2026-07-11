@@ -18,6 +18,10 @@ class ExportPreset:
     fps_rule: str
     description: str
 
+    def is_custom(self) -> bool:
+        """Return whether this preset should use existing detailed settings."""
+        return self.name == "Custom"
+
 
 class PresetRepository:
     """In-memory repository for built-in export presets."""
@@ -101,3 +105,7 @@ class PresetRepository:
                 return preset
 
         return None
+
+    def default(self) -> ExportPreset:
+        """Return the default export preset."""
+        return self._presets[0]

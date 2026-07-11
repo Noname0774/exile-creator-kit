@@ -23,8 +23,8 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
+from core.export import GenericExporter, ExportProfile  # noqa: E402
 from core.export import PreflightChecker  # noqa: E402
-from core.export import XExporter, YouTubeExporter  # noqa: E402
 from core.export.presets import PresetRepository  # noqa: E402
 from core.media import MediaSummary  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
@@ -39,7 +39,7 @@ from gui.components.recent_exports_card import build_recent_exports_card  # noqa
 from gui.components.status_card import build_status_card  # noqa: E402
 from gui.components.theme import BACKGROUND  # noqa: E402
 from gui.settings_window import create_settings_window  # noqa: E402
-from tools.export_to_x import x_output_path  # noqa: E402
+from tools.export_to_x import resolve_output_path, x_output_path  # noqa: E402
 from tools.export_to_youtube import youtube_output_path  # noqa: E402
 
 SUPPORTED_VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi"}
@@ -58,11 +58,15 @@ class ExportWorker:
         input_path: str,
         output_path: str,
         encoder_setting: str,
+        preset_name: str,
+        fallback_target: str,
     ) -> None:
         self.target = target
         self.input_path = input_path
         self.output_path = output_path
         self.encoder_setting = encoder_setting
+        self.preset_name = preset_name
+        self.fallback_target = fallback_target
         self.returncode: int | None = None
         self.command = ""
         self.stdout = ""
@@ -134,18 +138,24 @@ class ExportWorker:
 
         try:
             media_info = MediaInspector().analyze(self.input_path)
-            if self.target == "YouTube":
-                self.command = YouTubeExporter().export(
-                    self.input_path,
-                    self.output_path,
-                )
-            else:
+            preset_repository = PresetRepository()
+            preset = preset_repository.get_by_name(
+                self.preset_name
+            ) or preset_repository.default()
+            profile = ExportProfile.from_preset(
+                preset,
+                fallback_target=self.fallback_target,
+            )
+            video_bitrate = None
+            if profile.smart_bitrate:
                 bitrate = SmartBitrate().calculate(media_info.duration_seconds)
-                self.command = XExporter().export(
-                    self.input_path,
-                    self.output_path,
-                    bitrate,
-                )
+                video_bitrate = bitrate
+
+            self.command = GenericExporter(profile).export(
+                self.input_path,
+                self.output_path,
+                video_bitrate,
+            )
 
             if self.encoder_setting == ENCODER_SOFTWARE:
                 self.command = self._software_fallback_command(self.command)
@@ -199,10 +209,19 @@ def launch_export_workflow(
     file_path: str,
     output_path: str,
     encoder_setting: str,
+    preset_name: str,
+    fallback_target: str,
 ) -> ExportWorker:
     """Launch the existing export workflow."""
     target = "YouTube" if script_name == "export_to_youtube.py" else "X"
-    worker = ExportWorker(target, file_path, output_path, encoder_setting)
+    worker = ExportWorker(
+        target,
+        file_path,
+        output_path,
+        encoder_setting,
+        preset_name,
+        fallback_target,
+    )
     worker.start()
     return worker
 
@@ -314,6 +333,27 @@ def create_window() -> tk.Tk:
 
         return x_output_path(file_path)
 
+    def get_effective_export_target(button_target: str) -> str:
+        preset = preset_repository.get_by_name(selected_preset.get())
+        if preset is None or preset.is_custom():
+            return button_target
+
+        return preset.target_platform
+
+    def get_preset_output_path(file_path: str, button_target: str) -> Path:
+        preset = preset_repository.get_by_name(selected_preset.get())
+        if preset is None or preset.is_custom():
+            return get_output_path(file_path, button_target)
+
+        suffixes = {
+            "X": "_x",
+            "YouTube": "_youtube",
+            "YouTube Shorts": "_shorts",
+            "Discord": "_discord",
+        }
+        suffix = suffixes.get(preset.target_platform, "_custom")
+        return resolve_output_path(file_path, suffix)
+
     def refresh_recent_exports() -> None:
         entries = export_history.entries()
         if not entries:
@@ -399,7 +439,8 @@ def create_window() -> tk.Tk:
                         "Python traceback:",
                         process.traceback_text.strip() or "(not available)",
                         "",
-                        f"Selected preset: {job.target}",
+                        f"Selected preset: {process.preset_name}",
+                        f"Export target: {job.target}",
                         f"Selected encoder setting: {process.encoder_setting}",
                         f"Actual encoder used: {process.actual_encoder_used or 'unknown'}",
                         f"Fallback used: {process.fallback_used}",
@@ -446,6 +487,7 @@ def create_window() -> tk.Tk:
                         f"Version: {get_application_version()}",
                         f"Timestamp: {datetime.now().isoformat(timespec='seconds')}",
                         f"Export target: {job.target}",
+                        f"Selected preset: {process.preset_name}",
                         f"Selected encoder setting: {process.encoder_setting}",
                         f"Actual video codec used: {process.actual_encoder_used or 'unknown'}",
                         f"Output file: {job.output_path}",
@@ -619,8 +661,9 @@ def create_window() -> tk.Tk:
         set_open_log_button_enabled(False)
         progress_bar.start(10)
 
-        target = get_export_target(script_name)
-        output_path = get_output_path(file_path, target)
+        button_target = get_export_target(script_name)
+        target = get_effective_export_target(button_target)
+        output_path = get_preset_output_path(file_path, button_target)
         media_summary = current_media_summary
         if media_summary is not None:
             preflight_result = PreflightChecker().check(
@@ -666,6 +709,8 @@ def create_window() -> tk.Tk:
                 queued_job.input_path,
                 queued_job.output_path,
                 app_settings.encoder,
+                selected_preset.get(),
+                button_target,
             )
         except OSError as exc:
             progress_bar.stop()

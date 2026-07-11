@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from core.export.presets import ExportPreset
 from core.settings.service import SettingsService
 
 ENCODER_AUTO = "Auto (Recommended)"
@@ -57,6 +58,46 @@ class ExportProfile:
             },
             settings_service=settings_service,
         )
+
+    @classmethod
+    def from_preset(
+        cls,
+        preset: ExportPreset,
+        *,
+        fallback_target: str = "X",
+        settings_service: SettingsService | None = None,
+    ) -> "ExportProfile":
+        """Return an export profile for a selected preset."""
+        if preset.is_custom():
+            if fallback_target == "YouTube":
+                return cls.youtube(settings_service=settings_service)
+
+            return cls.x(settings_service=settings_service)
+
+        defaults = {
+            "video_codec": "h264_nvenc",
+            "audio_codec": preset.audio_codec,
+            "preset": "p5",
+            "quality": "23",
+            "audio_bitrate": preset.audio_bitrate,
+            "faststart": True,
+            "pixel_format": "yuv420p",
+            "smart_bitrate": preset.video_bitrate in {"smart", "size aware"},
+        }
+
+        if preset.name == "YouTube (High Quality)":
+            defaults["quality"] = "18"
+            defaults["smart_bitrate"] = False
+        elif preset.name == "YouTube Shorts":
+            defaults["quality"] = "20"
+            defaults["smart_bitrate"] = False
+        elif preset.name == "Discord":
+            defaults["quality"] = "28"
+            defaults["smart_bitrate"] = True
+
+        service = settings_service or SettingsService()
+        cls._apply_encoder_setting(defaults, service)
+        return cls(**defaults)
 
     @classmethod
     def _from_defaults(
