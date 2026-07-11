@@ -2,6 +2,43 @@
 
 All notable changes to Exile Creator Kit will be documented in this file.
 
+## v1.2.0-rc.1 - Release Candidate
+
+### Added
+
+- Premium dark UI foundation with componentized GUI cards.
+- Smart Environment foundation:
+  - GPU detection.
+  - Environment information.
+  - Encoder decision support.
+  - Diagnostics foundation.
+- Export Preset system:
+  - X (512 MB).
+  - YouTube (High Quality).
+  - YouTube Shorts.
+  - Discord.
+  - Custom.
+- Preset selector in the Export card.
+- Default Export Preset setting.
+- Preflight checks before export.
+- Preflight Warning confirmation flow.
+- Release Candidate checklist for v1.2.0-rc.1.
+
+### Changed
+
+- Export workflow now applies the selected preset to FFmpeg settings.
+- Settings window has been modernized for the v1.2 UI direction.
+- Media summary display is connected to the Premium UI.
+- Status card now displays environment readiness information.
+- FFprobe parsing is hardened for invalid JSON, empty data, corrupted media, and unexpected values.
+
+### Improved
+
+- Export is blocked when Preflight returns Error.
+- Export requires confirmation when Preflight returns Warning.
+- Media inspection failures now return safer user-facing errors.
+- Preset selections are saved and restored through SettingsService.
+
 ## v1.1.0 - Unreleased
 
 ### Added

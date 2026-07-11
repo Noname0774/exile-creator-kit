@@ -12,16 +12,16 @@ Create upload-ready videos for X and YouTube in just a few clicks.
 
 Exile Creator Kit (ECK) is a free and open-source Windows application designed for Path of Exile players and content creators who want to share great gameplay without learning FFmpeg or dealing with complicated export settings.
 
-> **Download the app from the Releases page:**  
-> [ExileCreatorKit-v1.1.0.zip](https://github.com/Noname0774/exile-creator-kit/releases/latest)
+> **Release Candidate:** `v1.2.0-rc.1`  
+> [Download the latest release](https://github.com/Noname0774/exile-creator-kit/releases/latest)
 >
-> Do **not** use **Code → Download ZIP** unless you want the source code.
+> Do **not** use **Code -> Download ZIP** unless you want the source code.
 
 ---
 
-## ✨ Why Exile Creator Kit?
+## Why Exile Creator Kit?
 
-Most players don't want to learn video encoding.
+Most players do not want to learn video encoding.
 
 They simply want to:
 
@@ -42,42 +42,56 @@ Just choose your video and export.
 
 ---
 
-# Screenshot
+## Screenshot
+
+Current v1.2 release candidate UI:
 
 ![Exile Creator Kit Main Window](assets/screenshots/main-window.png)
 
 ---
 
-# Features
+## Features
 
 - Export for **X (512 MB optimized)**
 - Export for **YouTube (High Quality)**
+- Export Preset System:
+  - X (512 MB)
+  - YouTube (High Quality)
+  - YouTube Shorts
+  - Discord
+  - Custom
+- Smart Environment:
+  - GPU detection
+  - automatic encoder recommendation
+  - FFmpeg / FFprobe environment checks
+- Preflight checks before export
+- Premium dark UI
 - Automatic Smart Bitrate
 - Automatic Media Information
 - Export History
 - Settings Management
-- Modern Windows GUI
 - Built-in FFmpeg support
 - MIT Licensed
 - Open Source
 
 ---
 
-# Quick Start
+## Quick Start
 
 1. Download the latest release.
 2. Extract the ZIP archive.
-3. Launch **ExileCreatorKit.exe**
+3. Launch **ExileCreatorKit.exe**.
 4. Choose your video.
-5. Click **Export for X** or **Export for YouTube**.
+5. Select an export preset.
+6. Click **Export for X** or **Export for YouTube**.
 
 That's it.
 
 ---
 
-# Designed For
+## Designed For
 
-Exile Creator Kit is designed for players who want to share clips—not learn video encoding.
+Exile Creator Kit is designed for players who want to share clips, not learn video encoding.
 
 Whether you're:
 
@@ -89,17 +103,18 @@ ECK keeps the workflow simple.
 
 ---
 
-# System Requirements
+## System Requirements
 
 - Windows 10 / Windows 11
-- NVIDIA GPU recommended (NVENC)
+- NVIDIA GPU recommended for NVENC
+- Software H.264 fallback available
 - FFmpeg included with release builds
 
 No Python installation required.
 
 ---
 
-# Project Goals
+## Project Goals
 
 Our philosophy is simple:
 
@@ -112,27 +127,28 @@ We prioritize usability over complexity.
 
 ---
 
-# Roadmap
+## Roadmap
 
-## Version 1.0
+### Version 1.2.0-rc.1
 
-- Stable Windows application
-- X Export
-- YouTube Export
-- Export History
-- Settings
-- Modern GUI
+- Premium UI release candidate
+- Smart Environment foundation
+- Export Preset System
+- Preflight enforcement
+- Hardened FFprobe error handling
+- Release Candidate validation checklist
 
-## Future
+### Future
 
-- Better UI polish
-- Additional export presets
+- Final v1.2.0 release
+- Real FFmpeg progress
+- Export cancellation
 - More creator workflows
 - Community-driven improvements
 
 ---
 
-# Contributing
+## Contributing
 
 Bug reports, ideas and pull requests are always welcome.
 
@@ -140,7 +156,7 @@ Please use GitHub Issues for bug reports and feature requests.
 
 ---
 
-# License
+## License
 
 This project is released under the **MIT License**.
 
@@ -148,7 +164,7 @@ See the LICENSE file for details.
 
 ---
 
-# Thank You
+## Thank You
 
 Exile Creator Kit started with a simple idea:
 

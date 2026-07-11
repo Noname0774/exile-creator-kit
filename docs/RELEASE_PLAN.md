@@ -1,82 +1,80 @@
 # Release Plan
 
-This document prepares the first public GitHub release for Exile Creator Kit.
+This document prepares the `v1.2.0-rc.1` release candidate for Exile Creator Kit.
 
 ## Release Title
 
 ```text
-Exile Creator Kit v1.0.0
+Exile Creator Kit v1.2.0-rc.1
 ```
 
 ## Version
 
-Target public release:
+Target release candidate:
 
 ```text
-v1.0.0
+v1.2.0-rc.1
 ```
 
-Current development version:
+Canonical version file:
 
 ```text
-v0.4.1-alpha
+VERSION
 ```
 
-Before publishing, update all visible and metadata versions to `v1.0.0`.
+## Release Goal
+
+`v1.2.0-rc.1` validates the next creator workflow before the final `v1.2.0` release.
+
+The release candidate focuses on:
+
+- Premium UI direction.
+- Smart Environment foundation.
+- Export Preset System.
+- Preflight enforcement.
+- Hardened media inspection.
+- Release candidate validation.
 
 ## GitHub Release Description
 
 ```markdown
-# Exile Creator Kit v1.0.0
+# Exile Creator Kit v1.2.0-rc.1
 
-Exile Creator Kit is a Windows desktop tool for creating upload-ready gameplay videos for X and YouTube.
+This is a release candidate for Exile Creator Kit v1.2.0.
 
-This first public release focuses on a simple creator workflow:
+It introduces the next creator workflow:
 
-- choose or drop a video
-- review basic media information
-- export for X with a 512 MB-oriented workflow
-- export for YouTube with a high-quality workflow
-- open the output folder after export
-- manage basic settings
-- see recent export results
+- Premium dark UI
+- Smart Environment detection
+- GPU and encoder readiness display
+- Export Preset System
+- Preflight checks before export
+- safer media inspection and FFprobe error handling
 
 ## Included
 
-- Desktop GUI
-- File picker and drag-and-drop video selection
-- MediaInfo display
-- X export
-- YouTube export
-- Smart Bitrate for X
-- FFmpeg and FFprobe integration
-- Export profiles
-- Export queue foundation
-- Export history foundation
-- Settings window
-- About dialog
-- Friendly status and error messages
+- X (512 MB) preset
+- YouTube (High Quality) preset
+- YouTube Shorts preset
+- Discord preset
+- Custom preset
+- Settings support for default export preset
+- Settings support for encoder behavior
+- Preflight OK / Warning / Error flow
+- Release Candidate checklist
 
 ## Requirements
 
 - Windows 10 or later
-- NVIDIA NVENC-capable GPU recommended
-- Bundled FFmpeg and FFprobe are included in the release ZIP
-
-## Installation
-
-1. Download `ExileCreatorKit-v1.0.0-win64.zip`.
-2. Extract the ZIP.
-3. Run `ExileCreatorKit.exe`.
-4. Choose or drop a video file.
-5. Export for X or YouTube.
+- FFmpeg and FFprobe included in release builds
+- NVIDIA GPU recommended for NVENC
+- Software H.264 fallback available
 
 ## Notes
 
-- Settings and export history are stored in `%APPDATA%\Exile Creator Kit`.
-- Source videos and exported videos are never stored in Git or bundled with the app.
-- This release does not upload videos automatically.
-- This release does not include OBS integration.
+- This is an RC build, not the final v1.2.0 release.
+- Please validate exports with test videos before using it for production work.
+- Settings and export history are stored in AppData.
 
 ## Known Issues
 
@@ -84,7 +82,7 @@ This first public release focuses on a simple creator workflow:
 - Export cancellation is not available yet.
 - Advanced batch queue management is not available yet.
 - Installer and auto-update are not included yet.
-- Code signing may not be available for the first public release.
+- Code signing may be deferred.
 ```
 
 ## Assets
@@ -92,7 +90,7 @@ This first public release focuses on a simple creator workflow:
 Required release assets:
 
 ```text
-ExileCreatorKit-v1.0.0-win64.zip
+ExileCreatorKit-v1.2.0-rc.1-win64.zip
 SHA256SUMS.txt
 LICENSE
 CHANGELOG.md
@@ -101,13 +99,12 @@ CHANGELOG.md
 Required files inside the ZIP:
 
 ```text
-ExileCreatorKit-v1.0.0-win64/
+ExileCreatorKit-v1.2.0-rc.1-win64/
 |
 +-- ExileCreatorKit.exe
 +-- ffmpeg.exe
 +-- ffprobe.exe
 +-- _internal/
-+-- tools/
 +-- assets/
 +-- LICENSES/
 +-- README.txt
@@ -119,25 +116,25 @@ Required bundled notices:
 ```text
 LICENSES/
 |
-+-- ExileCreatorKit.txt
 +-- FFmpeg.txt
 +-- THIRD_PARTY_NOTICES.txt
 ```
 
-Optional assets:
+Recommended screenshots:
 
 ```text
 screenshots/
 |
 +-- main-window.png
-+-- selected-video.png
-+-- export-completed.png
 +-- settings-window.png
++-- preset-selector.png
++-- preflight-warning.png
++-- export-completed.png
 ```
 
 ## Installation
 
-Recommended v1.0 distribution:
+Recommended `v1.2.0-rc.1` distribution:
 
 ```text
 Portable ZIP
@@ -148,10 +145,9 @@ User steps:
 1. Download the release ZIP from GitHub Releases.
 2. Extract it to any folder.
 3. Run `ExileCreatorKit.exe`.
-
-Do not require an installer for v1.0.
-
-Do not store active settings beside the executable.
+4. Choose or drop a video file.
+5. Select an export preset.
+6. Export for X or YouTube.
 
 Application data location:
 
@@ -159,105 +155,83 @@ Application data location:
 %APPDATA%\Exile Creator Kit
 ```
 
-## Known Issues
+## Validation
 
-Known v1.0 limitations:
+Use:
 
-- No automatic upload to X.
-- No automatic upload to YouTube.
-- No OBS integration.
-- No real FFmpeg progress parsing.
-- No export cancellation.
-- No advanced batch queue UI.
-- No installer.
-- No auto-update.
-- Code signing may be deferred.
+```text
+docs/RC_CHECKLIST.md
+```
 
-User-facing release notes should keep these limitations clear and short.
+Required validation areas:
 
-## Future Roadmap
-
-Planned v1.1+ candidates:
-
-- real FFmpeg progress display
-- export cancellation
-- advanced batch queue management
-- persistent export history improvements
-- per-target output folder rules
-- packaged installer
-- update checks
-- crash reporting
-- OBS workflow support
-- publishing workflow support
-
-Do not expand v1.0 scope during release preparation.
-
-## Screenshots To Include
-
-Recommended screenshots:
-
-- main window with no video selected
-- selected video information
-- completed X export
-- completed YouTube export
-- settings window
-- about dialog
-
-Screenshot rules:
-
-- use test videos only
-- avoid personal file paths
-- avoid copyrighted video frames unless permission is confirmed
-- keep screenshots consistent with v1.0 UI
+- Startup
+- GPU Detection
+- Encoder Auto
+- Environment
+- Diagnostics
+- Media Summary
+- Preflight
+- Export
+- Presets
+- Settings
+- UI
+- Packaging
+- README
+- Release Assets
 
 ## Release Checklist
 
 ### Version
 
-- [ ] Set canonical version to `v1.0.0`.
-- [ ] Update About dialog version.
-- [ ] Update CHANGELOG release date.
-- [ ] Confirm Git tag name: `v1.0.0`.
+- [ ] Confirm `VERSION` is `v1.2.0-rc.1`.
+- [ ] Confirm About dialog shows `v1.2.0-rc.1`.
+- [ ] Confirm README mentions `v1.2.0-rc.1`.
+- [ ] Confirm CHANGELOG includes `v1.2.0-rc.1`.
+- [ ] Confirm Git tag name: `v1.2.0-rc.1`.
 
-### Legal
+### Documentation
 
-- [ ] Confirm final project copyright holder.
-- [ ] Confirm MIT License text is final.
-- [ ] Add FFmpeg license notice.
-- [ ] Add third-party notices.
-- [ ] Confirm FFmpeg redistribution terms.
+- [ ] README release link is current.
+- [ ] README feature list includes Smart Environment.
+- [ ] README feature list includes Premium UI.
+- [ ] README feature list includes Preset System.
+- [ ] README screenshot is current.
+- [ ] RC checklist exists.
 
 ### Build Assets
 
 - [ ] Confirm `vendor/ffmpeg/ffmpeg.exe` exists.
 - [ ] Confirm `vendor/ffmpeg/ffprobe.exe` exists.
-- [ ] Confirm application icon exists or intentionally ship without one.
-- [ ] Confirm release ZIP includes required license files.
+- [ ] Confirm application icon exists.
+- [ ] Confirm release ZIP includes license files.
+- [ ] Confirm third-party notices exist.
 
 ### Build
 
-- [ ] Install build dependencies.
 - [ ] Run PyInstaller using `packaging/pyinstaller.spec`.
 - [ ] Confirm `dist/ExileCreatorKit/ExileCreatorKit.exe` exists.
-- [ ] Confirm `ffmpeg.exe` is beside `ExileCreatorKit.exe`.
-- [ ] Confirm `ffprobe.exe` is beside `ExileCreatorKit.exe`.
+- [ ] Confirm `ffmpeg.exe` is bundled.
+- [ ] Confirm `ffprobe.exe` is bundled.
 - [ ] Create portable ZIP.
 - [ ] Generate SHA256 checksum.
 
 ### Runtime Validation
 
-- [ ] Launch app from Explorer.
-- [ ] Launch app from Command Prompt.
-- [ ] Launch app from a path containing spaces.
-- [ ] Confirm Settings window opens.
-- [ ] Confirm About dialog opens.
-- [ ] Select a supported video.
-- [ ] Drop a supported video.
-- [ ] Confirm MediaInfo display.
-- [ ] Export for X.
-- [ ] Export for YouTube.
+- [ ] Complete `docs/RC_CHECKLIST.md`.
+- [ ] Launch from Explorer.
+- [ ] Launch from Command Prompt.
+- [ ] Launch from a path containing spaces.
+- [ ] Select supported videos.
+- [ ] Drop supported videos.
+- [ ] Validate preset selection.
+- [ ] Validate Preflight OK / Warning / Error.
+- [ ] Export using X preset.
+- [ ] Export using YouTube preset.
+- [ ] Export using YouTube Shorts preset.
+- [ ] Export using Discord preset.
+- [ ] Export using Custom preset.
 - [ ] Confirm output files are playable.
-- [ ] Confirm Open Output Folder works.
 - [ ] Confirm settings persist in AppData.
 - [ ] Confirm export history persists in AppData.
 
@@ -265,24 +239,20 @@ Screenshot rules:
 
 - [ ] Start from a clean working tree.
 - [ ] Create release commit.
-- [ ] Create `v1.0.0` tag.
+- [ ] Create `v1.2.0-rc.1` tag.
 - [ ] Draft GitHub Release.
 - [ ] Paste release description.
 - [ ] Attach ZIP.
 - [ ] Attach checksum file.
 - [ ] Attach screenshots if ready.
-- [ ] Mark as latest release.
+- [ ] Mark as pre-release.
 - [ ] Publish.
 - [ ] Verify release page after publishing.
 
 ## Remaining Work
 
-- Finalize `v1.0.0` version updates.
-- Confirm final copyright holder.
-- Add FFmpeg and third-party license notices.
-- Complete first PyInstaller build.
-- Validate packaged runtime behavior.
-- Capture screenshots.
-- Assemble release ZIP.
+- Complete RC validation.
+- Update screenshot assets if needed.
+- Build the distributable ZIP.
 - Generate checksums.
-- Publish GitHub Release after validation passes.
+- Publish GitHub pre-release after validation passes.
