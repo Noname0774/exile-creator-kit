@@ -10,6 +10,7 @@ def default_settings() -> AppSettings:
         remember_last_selected_folder=True,
         open_output_folder_after_export=True,
         default_export_target="X",
+        default_export_preset="X (512 MB)",
         encoder="Auto (Recommended)",
         ffmpeg_path="ffmpeg",
         ffprobe_path="ffprobe",

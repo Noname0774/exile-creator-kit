@@ -90,6 +90,10 @@ class PresetRepository:
         """Return all available presets."""
         return self._presets
 
+    def list_names(self) -> tuple[str, ...]:
+        """Return preset display names."""
+        return tuple(preset.name for preset in self._presets)
+
     def get_by_name(self, name: str) -> ExportPreset | None:
         """Return a preset by display name."""
         for preset in self._presets:

@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 
 class SettingsValidator:
     VALID_EXPORT_TARGETS = {"X", "YouTube"}
+    VALID_EXPORT_PRESETS = {
+        "X (512 MB)",
+        "YouTube (High Quality)",
+        "YouTube Shorts",
+        "Discord",
+        "Custom",
+    }
     VALID_ENCODERS = {"Auto (Recommended)", "NVIDIA NVENC", "Software (libx264)"}
     VALID_PRESETS = {"p1", "p2", "p3", "p4", "p5", "p6", "p7"}
     VALID_PIXEL_FORMATS = {"yuv420p", "nv12", "p010le"}
@@ -26,6 +33,13 @@ class SettingsValidator:
             settings.default_export_target,
             self.VALID_EXPORT_TARGETS,
             defaults.default_export_target,
+        )
+        self._validate_choice(
+            settings,
+            "default_export_preset",
+            settings.default_export_preset,
+            self.VALID_EXPORT_PRESETS,
+            defaults.default_export_preset,
         )
         self._validate_choice(
             settings,

@@ -25,6 +25,7 @@ if str(ROOT_DIR) not in sys.path:
 from core.export import ExportHistory, ExportJob, ExportQueue, HistoryEntry  # noqa: E402
 from core.export import PreflightChecker  # noqa: E402
 from core.export import XExporter, YouTubeExporter  # noqa: E402
+from core.export.presets import PresetRepository  # noqa: E402
 from core.media import MediaSummary  # noqa: E402
 from core.media.inspector import MediaInspector  # noqa: E402
 from core.media.smart_bitrate import SmartBitrate  # noqa: E402
@@ -227,6 +228,18 @@ def create_window() -> tk.Tk:
     app_settings = settings_service.get_settings()
     environment_info = EnvironmentDetector().detect()
     encoder_decision = EncoderSelector().select(environment_info)
+    preset_repository = PresetRepository()
+    preset_names = preset_repository.list_names()
+    default_preset_name = (
+        app_settings.default_export_preset
+        if app_settings.default_export_preset in preset_names
+        else preset_names[0]
+    )
+    selected_preset = tk.StringVar(value=default_preset_name)
+    preset_description = tk.StringVar(value="")
+    recommended_encoder = tk.StringVar(
+        value=f"Recommended encoder: {encoder_decision.auto_label}"
+    )
     current_media_summary: MediaSummary | None = None
     output_folder_path = tk.StringVar(value="")
     log_folder_path = tk.StringVar(value="")
@@ -245,6 +258,22 @@ def create_window() -> tk.Tk:
     def reload_settings() -> None:
         nonlocal app_settings
         app_settings = settings_service.get_settings()
+
+    def update_selected_preset(preset_name: str, *, save: bool = True) -> None:
+        nonlocal app_settings
+        preset = preset_repository.get_by_name(preset_name)
+        if preset is None:
+            preset = preset_repository.get_by_name(preset_names[0])
+
+        if preset is None:
+            return
+
+        selected_preset.set(preset.name)
+        preset_description.set(preset.description)
+        if save:
+            app_settings = settings_service.update_settings(
+                default_export_preset=preset.name
+            )
 
     def get_last_selected_folder() -> str:
         if app_settings.remember_last_selected_folder:
@@ -761,6 +790,7 @@ def create_window() -> tk.Tk:
     register_drop_target(window)
     register_drop_target(canvas)
     register_drop_target(content_frame)
+    update_selected_preset(selected_preset.get(), save=False)
     build_header(
         content_frame,
         logo_file=ROOT_DIR / "assets" / "branding" / "eck-icon.png",
@@ -788,6 +818,11 @@ def create_window() -> tk.Tk:
 
     export_widgets = build_export_card(
         export_column,
+        preset_names=preset_names,
+        selected_preset=selected_preset,
+        preset_description=preset_description,
+        recommended_encoder=recommended_encoder,
+        on_preset_selected=update_selected_preset,
         on_export_x=lambda: export_selected("export_to_x.py"),
         on_export_youtube=lambda: export_selected("export_to_youtube.py"),
     )
