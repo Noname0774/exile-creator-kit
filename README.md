@@ -12,7 +12,7 @@ Create upload-ready videos for X and YouTube in just a few clicks.
 
 Exile Creator Kit (ECK) is a free and open-source Windows application designed for Path of Exile players and content creators who want to share great gameplay without learning FFmpeg or dealing with complicated export settings.
 
-> **Release Candidate:** `v1.2.0-rc.1`  
+> **Latest Release:** `v1.2.0`  
 > [Download the latest release](https://github.com/Noname0774/exile-creator-kit/releases/latest)
 >
 > Do **not** use **Code -> Download ZIP** unless you want the source code.
@@ -44,7 +44,7 @@ Just choose your video and export.
 
 ## Screenshot
 
-Current v1.2 release candidate UI:
+Current v1.2 official release UI:
 
 ![Exile Creator Kit Main Window](assets/screenshots/main-window.png)
 
@@ -129,18 +129,17 @@ We prioritize usability over complexity.
 
 ## Roadmap
 
-### Version 1.2.0-rc.1
+### Version 1.2.0
 
-- Premium UI release candidate
+- Premium UI official release
 - Smart Environment foundation
 - Export Preset System
 - Preflight enforcement
 - Hardened FFprobe error handling
-- Release Candidate validation checklist
+- Release validation checklist
 
 ### Future
 
-- Final v1.2.0 release
 - Real FFmpeg progress
 - Export cancellation
 - More creator workflows

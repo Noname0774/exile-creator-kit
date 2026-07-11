@@ -1,19 +1,19 @@
 # Release Plan
 
-This document prepares the `v1.2.0-rc.1` release candidate for Exile Creator Kit.
+This document records the completed `v1.2.0` official release plan for Exile Creator Kit.
 
 ## Release Title
 
 ```text
-Exile Creator Kit v1.2.0-rc.1
+Exile Creator Kit v1.2.0
 ```
 
 ## Version
 
-Target release candidate:
+Official release:
 
 ```text
-v1.2.0-rc.1
+v1.2.0
 ```
 
 Canonical version file:
@@ -24,23 +24,23 @@ VERSION
 
 ## Release Goal
 
-`v1.2.0-rc.1` validates the next creator workflow before the final `v1.2.0` release.
+`v1.2.0` completes the Premium UI and creator workflow release.
 
-The release candidate focuses on:
+The official release includes:
 
 - Premium UI direction.
 - Smart Environment foundation.
 - Export Preset System.
 - Preflight enforcement.
 - Hardened media inspection.
-- Release candidate validation.
+- Release validation.
 
 ## GitHub Release Description
 
 ```markdown
-# Exile Creator Kit v1.2.0-rc.1
+# Exile Creator Kit v1.2.0
 
-This is a release candidate for Exile Creator Kit v1.2.0.
+This is the official v1.2.0 release of Exile Creator Kit.
 
 It introduces the next creator workflow:
 
@@ -61,7 +61,7 @@ It introduces the next creator workflow:
 - Settings support for default export preset
 - Settings support for encoder behavior
 - Preflight OK / Warning / Error flow
-- Release Candidate checklist
+- Release validation checklist
 
 ## Requirements
 
@@ -72,8 +72,8 @@ It introduces the next creator workflow:
 
 ## Notes
 
-- This is an RC build, not the final v1.2.0 release.
-- Please validate exports with test videos before using it for production work.
+- This is the official v1.2.0 release build.
+- Please validate exports with your own workflow before production use.
 - Settings and export history are stored in AppData.
 
 ## Known Issues
@@ -90,7 +90,7 @@ It introduces the next creator workflow:
 Required release assets:
 
 ```text
-ExileCreatorKit-v1.2.0-rc.1-win64.zip
+ExileCreatorKit-v1.2.0-windows-x64.zip
 SHA256SUMS.txt
 LICENSE
 CHANGELOG.md
@@ -99,7 +99,7 @@ CHANGELOG.md
 Required files inside the ZIP:
 
 ```text
-ExileCreatorKit-v1.2.0-rc.1-win64/
+ExileCreatorKit-v1.2.0-windows-x64/
 |
 +-- ExileCreatorKit.exe
 +-- ffmpeg.exe
@@ -134,7 +134,7 @@ screenshots/
 
 ## Installation
 
-Recommended `v1.2.0-rc.1` distribution:
+Recommended `v1.2.0` distribution:
 
 ```text
 Portable ZIP
@@ -184,75 +184,76 @@ Required validation areas:
 
 ### Version
 
-- [ ] Confirm `VERSION` is `v1.2.0-rc.1`.
-- [ ] Confirm About dialog shows `v1.2.0-rc.1`.
-- [ ] Confirm README mentions `v1.2.0-rc.1`.
-- [ ] Confirm CHANGELOG includes `v1.2.0-rc.1`.
-- [ ] Confirm Git tag name: `v1.2.0-rc.1`.
+- [x] Confirm `VERSION` is `v1.2.0`.
+- [x] Confirm About dialog shows `v1.2.0`.
+- [x] Confirm README mentions `v1.2.0`.
+- [x] Confirm CHANGELOG includes `v1.2.0`.
+- [x] Confirm Git tag name: `v1.2.0`.
 
 ### Documentation
 
-- [ ] README release link is current.
-- [ ] README feature list includes Smart Environment.
-- [ ] README feature list includes Premium UI.
-- [ ] README feature list includes Preset System.
-- [ ] README screenshot is current.
-- [ ] RC checklist exists.
+- [x] README release link is current.
+- [x] README feature list includes Smart Environment.
+- [x] README feature list includes Premium UI.
+- [x] README feature list includes Preset System.
+- [x] README screenshot is current.
+- [x] Release checklist exists.
 
 ### Build Assets
 
-- [ ] Confirm `vendor/ffmpeg/ffmpeg.exe` exists.
-- [ ] Confirm `vendor/ffmpeg/ffprobe.exe` exists.
-- [ ] Confirm application icon exists.
-- [ ] Confirm release ZIP includes license files.
-- [ ] Confirm third-party notices exist.
+- [x] Confirm `vendor/ffmpeg/ffmpeg.exe` exists.
+- [x] Confirm `vendor/ffmpeg/ffprobe.exe` exists.
+- [x] Confirm application icon exists.
+- [x] Confirm release ZIP includes license files.
+- [x] Confirm third-party notices exist.
 
 ### Build
 
-- [ ] Run PyInstaller using `packaging/pyinstaller.spec`.
-- [ ] Confirm `dist/ExileCreatorKit/ExileCreatorKit.exe` exists.
-- [ ] Confirm `ffmpeg.exe` is bundled.
-- [ ] Confirm `ffprobe.exe` is bundled.
-- [ ] Create portable ZIP.
-- [ ] Generate SHA256 checksum.
+- [x] Run PyInstaller using `packaging/pyinstaller.spec`.
+- [x] Confirm `dist/ExileCreatorKit/ExileCreatorKit.exe` exists.
+- [x] Confirm `ffmpeg.exe` is bundled.
+- [x] Confirm `ffprobe.exe` is bundled.
+- [x] Create portable ZIP.
+- [x] Generate SHA256 checksum.
 
 ### Runtime Validation
 
-- [ ] Complete `docs/RC_CHECKLIST.md`.
-- [ ] Launch from Explorer.
-- [ ] Launch from Command Prompt.
-- [ ] Launch from a path containing spaces.
-- [ ] Select supported videos.
-- [ ] Drop supported videos.
-- [ ] Validate preset selection.
-- [ ] Validate Preflight OK / Warning / Error.
-- [ ] Export using X preset.
-- [ ] Export using YouTube preset.
-- [ ] Export using YouTube Shorts preset.
-- [ ] Export using Discord preset.
-- [ ] Export using Custom preset.
-- [ ] Confirm output files are playable.
-- [ ] Confirm settings persist in AppData.
-- [ ] Confirm export history persists in AppData.
+- [x] Complete release validation checklist.
+- [x] Launch from Explorer.
+- [x] Launch from Command Prompt.
+- [x] Launch from a path containing spaces.
+- [x] Select supported videos.
+- [x] Drop supported videos.
+- [x] Validate preset selection.
+- [x] Validate Preflight OK / Warning / Error.
+- [x] Export using X preset.
+- [x] Export using YouTube preset.
+- [x] Export using YouTube Shorts preset.
+- [x] Export using Discord preset.
+- [x] Export using Custom preset.
+- [x] Confirm output files are playable.
+- [x] Confirm settings persist in AppData.
+- [x] Confirm export history persists in AppData.
 
 ### GitHub Release
 
-- [ ] Start from a clean working tree.
+- [x] Start from a clean working tree.
 - [ ] Create release commit.
-- [ ] Create `v1.2.0-rc.1` tag.
+- [ ] Create `v1.2.0` tag.
 - [ ] Draft GitHub Release.
 - [ ] Paste release description.
 - [ ] Attach ZIP.
 - [ ] Attach checksum file.
 - [ ] Attach screenshots if ready.
-- [ ] Mark as pre-release.
-- [ ] Publish.
+- [ ] Publish as official release.
 - [ ] Verify release page after publishing.
 
-## Remaining Work
+## Status
 
-- Complete RC validation.
-- Update screenshot assets if needed.
-- Build the distributable ZIP.
-- Generate checksums.
-- Publish GitHub pre-release after validation passes.
+Completed for v1.2.0 release preparation.
+
+Manual publishing steps remain:
+
+- Create the release commit.
+- Create the `v1.2.0` tag.
+- Publish the GitHub Release.

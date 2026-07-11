@@ -2,7 +2,7 @@
 
 All notable changes to Exile Creator Kit will be documented in this file.
 
-## v1.2.0-rc.1 - Release Candidate
+## v1.2.0 - Official Release
 
 ### Added
 
@@ -22,7 +22,7 @@ All notable changes to Exile Creator Kit will be documented in this file.
 - Default Export Preset setting.
 - Preflight checks before export.
 - Preflight Warning confirmation flow.
-- Release Candidate checklist for v1.2.0-rc.1.
+- Release validation checklist for v1.2.0.
 
 ### Changed
 
