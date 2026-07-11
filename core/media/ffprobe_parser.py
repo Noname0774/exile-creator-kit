@@ -1,8 +1,13 @@
 """Parser for ffprobe JSON output."""
 
 import json
+from pathlib import Path
 
 from core.media.info import MediaInfo
+
+
+class FFprobeParseError(RuntimeError):
+    """Raised when ffprobe JSON cannot be converted into MediaInfo."""
 
 
 class FFprobeParser:
@@ -10,43 +15,98 @@ class FFprobeParser:
 
     def parse(self, raw_json: str) -> MediaInfo:
         """Return MediaInfo parsed from raw ffprobe JSON."""
-        data = json.loads(raw_json)
-        streams = data.get("streams", [])
-        video = self._find_stream(streams, "video")
-        audio = self._find_stream(streams, "audio")
-        format_info = data.get("format", {})
+        try:
+            data = self._load_json(raw_json)
+            streams = self._as_list(data.get("streams"), "streams")
+            video = self._find_stream(streams, "video")
+            audio = self._find_stream(streams, "audio")
+            format_info = self._as_dict(data.get("format"), "format")
 
-        duration_seconds = self._to_float(format_info.get("duration"))
-        file_size_bytes = self._to_int(format_info.get("size"))
+            if not video:
+                raise FFprobeParseError("Invalid video file: video stream was not found.")
 
-        return MediaInfo(
-            file_name=format_info.get("filename", ""),
-            extension="",
-            duration_seconds=duration_seconds,
-            duration_text=self._format_duration(duration_seconds),
-            file_size_bytes=file_size_bytes,
-            file_size_mb=file_size_bytes / 1024 / 1024 if file_size_bytes else 0.0,
-            width=self._to_int(video.get("width")),
-            height=self._to_int(video.get("height")),
-            fps=self._parse_fps(video.get("avg_frame_rate")),
-            video_codec=video.get("codec_name", ""),
-            audio_codec=audio.get("codec_name", ""),
-            video_bitrate=self._to_int(video.get("bit_rate")),
-            audio_bitrate=self._to_int(audio.get("bit_rate")),
-            total_bitrate=self._to_int(format_info.get("bit_rate")),
-        )
+            duration_seconds = self._to_float(format_info.get("duration"))
+            file_size_bytes = self._to_int(format_info.get("size"))
+            file_name = self._to_string(format_info.get("filename"))
+
+            return MediaInfo(
+                file_name=file_name,
+                extension=Path(file_name).suffix,
+                duration_seconds=duration_seconds,
+                duration_text=self._format_duration(duration_seconds),
+                file_size_bytes=file_size_bytes,
+                file_size_mb=file_size_bytes / 1024 / 1024 if file_size_bytes else 0.0,
+                width=self._to_int(video.get("width")),
+                height=self._to_int(video.get("height")),
+                fps=self._parse_fps(video.get("avg_frame_rate")),
+                video_codec=self._to_string(video.get("codec_name")),
+                audio_codec=self._to_string(audio.get("codec_name")),
+                video_bitrate=self._to_int(video.get("bit_rate")),
+                audio_bitrate=self._to_int(audio.get("bit_rate")),
+                total_bitrate=self._to_int(format_info.get("bit_rate")),
+            )
+        except FFprobeParseError:
+            raise
+        except (ValueError, TypeError, KeyError, IndexError) as exc:
+            raise FFprobeParseError("Invalid ffprobe data.") from exc
 
     def _find_stream(self, streams: list[dict], codec_type: str) -> dict:
         for stream in streams:
-            if stream.get("codec_type") == codec_type:
+            if isinstance(stream, dict) and stream.get("codec_type") == codec_type:
                 return stream
         return {}
 
+    def _load_json(self, raw_json: str) -> dict:
+        if not isinstance(raw_json, str) or not raw_json.strip():
+            raise FFprobeParseError("ffprobe returned empty data.")
+
+        try:
+            data = json.loads(raw_json)
+        except json.JSONDecodeError as exc:
+            raise FFprobeParseError("ffprobe returned invalid JSON.") from exc
+
+        if not isinstance(data, dict):
+            raise FFprobeParseError("ffprobe JSON root must be an object.")
+
+        return data
+
+    def _as_list(self, value: object, name: str) -> list:
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise FFprobeParseError(f"ffprobe field is invalid: {name}.")
+        return value
+
+    def _as_dict(self, value: object, name: str) -> dict:
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise FFprobeParseError(f"ffprobe field is invalid: {name}.")
+        return value
+
     def _to_int(self, value: object) -> int:
-        return int(value) if value not in (None, "") else 0
+        if value in (None, ""):
+            return 0
+
+        try:
+            return int(float(value))
+        except (TypeError, ValueError):
+            return 0
 
     def _to_float(self, value: object) -> float:
-        return float(value) if value not in (None, "") else 0.0
+        if value in (None, ""):
+            return 0.0
+
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _to_string(self, value: object) -> str:
+        if value is None:
+            return ""
+
+        return str(value)
 
     def _parse_fps(self, value: object) -> float:
         if not isinstance(value, str) or "/" not in value:
