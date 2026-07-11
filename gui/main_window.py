@@ -547,20 +547,46 @@ def create_window() -> tk.Tk:
 
         if "ffmpeg" in message and ("not found" in message or "is not recognized" in message):
             return (
-                "FFmpeg was not found.\n"
-                "Please install FFmpeg or update the FFmpeg path in Settings."
+                "FFmpegが見つかりません。\n\n"
+                "FFmpegが利用できないため、動画を書き出せません。\n"
+                "SettingsでFFmpegの場所を確認するか、"
+                "同梱版のFFmpegが正しく配置されているか確認してください。"
             )
 
-        if "ffprobe" in message and ("not found" in message or "is not recognized" in message):
+        if (
+            "ffprobe" in message
+            and (
+                "not found" in message
+                or "is not recognized" in message
+                or "could not be executed" in message
+                or "timed out" in message
+                or "empty output" in message
+                or "failed" in message
+            )
+        ):
             return (
-                "FFprobe was not found.\n"
-                "Please install FFmpeg or update the FFprobe path in Settings."
+                "動画情報を取得できませんでした。\n\n"
+                "FFprobeが利用できない可能性があります。\n"
+                "SettingsでFFprobeの場所を確認するか、"
+                "別の動画で試してください。"
             )
 
         if "permission denied" in message or "access is denied" in message:
             return (
-                "Permission denied.\n"
-                "Please choose a different output folder or check folder permissions."
+                "ファイルへアクセスできません。\n\n"
+                "権限が不足している可能性があります。\n"
+                "別の場所へコピーしてから、もう一度試してください。"
+            )
+
+        if (
+            "file does not exist" in message
+            or "path is not a file" in message
+            or "path is empty" in message
+        ):
+            return (
+                "選択したファイルが見つかりません。\n\n"
+                "ファイルが移動または削除された可能性があります。\n"
+                "もう一度動画ファイルを選択してください。"
             )
 
         if (
@@ -569,29 +595,38 @@ def create_window() -> tk.Tk:
             or "cannot find the path" in message
         ):
             return (
-                "Output folder unavailable.\n"
-                "Please choose an existing output folder in Settings."
+                "出力先フォルダーを利用できません。\n\n"
+                "保存先が存在しないか、アクセスできない可能性があります。\n"
+                "Settingsで出力先フォルダーを確認してください。"
             )
 
         if (
             "invalid data" in message
             or "moov atom not found" in message
             or "could not find codec parameters" in message
+            or "video stream was not found" in message
+            or "invalid ffprobe data" in message
+            or "invalid json" in message
+            or "json root" in message
+            or "field is invalid" in message
         ):
             return (
-                "Invalid video file.\n"
-                "Please choose a playable video file and try again."
+                "動画を解析できませんでした。\n\n"
+                "動画が破損しているか、対応していないコーデックです。\n"
+                "別の動画を選択してください。"
             )
 
         if raw_message:
             return (
-                "Export failed.\n"
-                "Please check the selected video and export settings, then try again."
+                "処理に失敗しました。\n\n"
+                "選択した動画、保存先、設定を確認してから"
+                "もう一度試してください。"
             )
 
         return (
-            "Export failed for an unknown reason.\n"
-            "Please try another video or check your export settings."
+            "不明なエラーが発生しました。\n\n"
+            "別の動画を選択するか、設定を確認してから"
+            "もう一度試してください。"
         )
 
     def set_failed_status(error: object) -> None:
@@ -769,7 +804,18 @@ def create_window() -> tk.Tk:
     def set_selected_file(file_path: str) -> None:
         path = Path(file_path)
         if path.suffix.lower() not in SUPPORTED_VIDEO_EXTENSIONS:
-            messagebox.showinfo("Exile Creator Kit", "Please choose a video file.")
+            message = (
+                "このファイルは動画として読み込めません。\n\n"
+                "対応形式:\n"
+                "MP4\n"
+                "MKV\n"
+                "MOV\n"
+                "AVI\n\n"
+                "別の動画を選択してください。"
+            )
+            export_status.set("Failed")
+            export_message.set(message)
+            messagebox.showinfo("Exile Creator Kit", message)
             return
 
         selected_file_path.set(str(path))
@@ -788,8 +834,9 @@ def create_window() -> tk.Tk:
         file_path = selected_file_path.get()
         if not file_path:
             export_status.set("Failed")
-            export_message.set("No video selected.")
-            messagebox.showinfo("Exile Creator Kit", "Please choose a video first.")
+            message = "動画を選択してください。\n\n先に動画ファイルを選択してください。"
+            export_message.set(message)
+            messagebox.showinfo("Exile Creator Kit", message)
             return
 
         if not is_ffmpeg_available():
