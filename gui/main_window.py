@@ -18,7 +18,29 @@ except ImportError:
     TkinterDnD = None
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+def _resolve_root_dir() -> Path:
+    candidates = []
+    meipass = getattr(sys, "_MEIPASS", "")
+    if meipass:
+        candidates.append(Path(meipass))
+
+    executable_dir = Path(sys.executable).resolve().parent
+    candidates.extend(
+        [
+            executable_dir / "_internal",
+            executable_dir,
+            Path(__file__).resolve().parents[1],
+        ]
+    )
+
+    for candidate in candidates:
+        if (candidate / "VERSION").exists() or (candidate / "assets").exists():
+            return candidate
+
+    return Path(__file__).resolve().parents[1]
+
+
+ROOT_DIR = _resolve_root_dir()
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 

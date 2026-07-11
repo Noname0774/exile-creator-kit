@@ -38,17 +38,23 @@ binaries += optional_binary(VENDOR_FFMPEG_DIR / "ffprobe.exe", ".")
 
 datas = []
 datas += optional_binary(PROJECT_DIR / "VERSION", ".")
+datas += optional_binary(PROJECT_DIR / "LICENSE", ".")
+datas += optional_data_tree(PROJECT_DIR / "assets" / "branding", "assets/branding")
 datas += optional_data_tree(PROJECT_DIR / "assets" / "icons", "assets/icons")
 datas += optional_data_tree(PROJECT_DIR / "LICENSES", "LICENSES")
-datas += optional_data_tree(PROJECT_DIR / "tools", "tools")
 
 hiddenimports = []
 hiddenimports += collect_submodules("tkinter")
 hiddenimports += collect_submodules("tkinterdnd2")
 hiddenimports += [
+    "PIL",
+    "PIL.Image",
+    "PIL.ImageTk",
     "core.export",
     "core.export.generic_exporter",
     "core.export.history",
+    "core.export.preflight",
+    "core.export.presets",
     "core.export.profile",
     "core.export.queue",
     "core.export.x_exporter",
@@ -58,6 +64,7 @@ hiddenimports += [
     "core.media.ffprobe_parser",
     "core.media.info",
     "core.media.inspector",
+    "core.media.media_summary",
     "core.media.smart_bitrate",
     "core.settings",
     "core.settings.defaults",
@@ -66,8 +73,20 @@ hiddenimports += [
     "core.settings.service",
     "core.settings.validator",
     "core.storage.path_resolver",
+    "core.system",
+    "core.system.diagnostics",
+    "core.system.encoder_selector",
+    "core.system.environment",
+    "core.system.gpu_detector",
     "gui.about_window",
+    "gui.components.export_card",
+    "gui.components.header",
+    "gui.components.media_card",
+    "gui.components.recent_exports_card",
+    "gui.components.status_card",
+    "gui.components.theme",
     "gui.settings_window",
+    "tkinterdnd2",
     "tools.export_to_x",
     "tools.export_to_youtube",
 ]
